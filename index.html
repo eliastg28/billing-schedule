@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Gestiona los ciclos de facturación de tus tarjetas de crédito y descubre qué tarjeta usar hoy para tener más días de crédito sin intereses." />
+  <meta name="theme-color" content="#0a0d14" />
+  <title>Ciclo de Tarjetas · ¿Con qué tarjeta compro hoy?</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='12' width='56' height='40' rx='8' fill='%238b9bff'/%3E%3Crect x='4' y='22' width='56' height='8' fill='%230a0d14'/%3E%3Crect x='12' y='38' width='14' height='6' rx='2' fill='%23ffffff'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    /* Aplica el tema guardado antes del primer pintado para evitar parpadeos. */
+    (function () {
+      try {
+        var saved = localStorage.getItem('ciclo-tarjetas:theme');
+        if (saved === 'light' || saved === 'dark') document.documentElement.setAttribute('data-theme', saved);
+      } catch (e) { /* LocalStorage no disponible: se mantiene el tema oscuro. */ }
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- =====================================================================
+       Sprite de íconos SVG (se reutilizan con <use href="#i-...">)
+       ===================================================================== -->
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+    <symbol id="i-calc" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18.5h.01M12 18.5h.01M16 18.5h.01"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol>
+    <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  </svg>
+
+  <!-- =====================================================================
+       Encabezado + navegación (barra inferior en móvil, superior en escritorio)
+       ===================================================================== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="#inicio" aria-label="Ciclo de Tarjetas, ir al inicio">
+        <span class="brand-logo" aria-hidden="true"><svg class="icon"><use href="#i-card"/></svg></span>
+        <span class="brand-text">
+          <span class="brand-title">Ciclo de Tarjetas</span>
+          <span class="brand-sub" id="header-date">&nbsp;</span>
+        </span>
+      </a>
+
+      <nav class="app-nav" aria-label="Secciones principales">
+        <a class="nav-link" href="#inicio" data-route="inicio">
+          <svg class="icon" aria-hidden="true"><use href="#i-star"/></svg><span>Hoy</span>
+        </a>
+        <a class="nav-link" href="#simulador" data-route="simulador">
+          <svg class="icon" aria-hidden="true"><use href="#i-calc"/></svg><span>Simular</span>
+        </a>
+        <a class="nav-link" href="#calendario" data-route="calendario">
+          <svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg><span>Calendario</span>
+        </a>
+        <a class="nav-link" href="#tarjetas" data-route="tarjetas">
+          <svg class="icon" aria-hidden="true"><use href="#i-card"/></svg><span>Tarjetas</span>
+        </a>
+        <a class="nav-link" href="#reglas" data-route="reglas">
+          <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg><span>Reglas</span>
+        </a>
+      </nav>
+
+      <button type="button" class="icon-btn theme-toggle" id="theme-toggle" aria-label="Cambiar a tema claro">
+        <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+        <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="app-main" tabindex="-1">
+
+    <!-- ===================================================================
+         VISTA 1 · RECOMENDADOR EN TIEMPO REAL
+         =================================================================== -->
+    <section class="view" id="view-inicio" data-view="inicio" aria-labelledby="t-inicio">
+      <div class="view-head">
+        <div>
+          <p class="kicker">Recomendador en tiempo real</p>
+          <h1 class="view-title" id="t-inicio">¿Con qué tarjeta compro hoy?</h1>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="stack">
+          <div id="hero"></div>
+          <section class="panel" aria-labelledby="t-ranking">
+            <header class="panel-head">
+              <h2 id="t-ranking">Ranking de hoy</h2>
+              <p class="panel-sub">De la mejor opción a la menos recomendada, según los días de crédito sin intereses.</p>
+            </header>
+            <ol id="ranking-today" class="rank-list"></ol>
+          </section>
+        </div>
+
+        <aside class="stack">
+          <section class="panel" aria-labelledby="t-upcoming">
+            <header class="panel-head">
+              <h2 id="t-upcoming">Próximos 30 días</h2>
+              <p class="panel-sub">Inicios de ciclo, cierres y fechas límite de pago.</p>
+            </header>
+            <ul id="upcoming" class="upcoming-list"></ul>
+          </section>
+
+          <section class="panel panel--accent" aria-labelledby="t-core-rules">
+            <header class="panel-head">
+              <p class="eyebrow">Recuérdalo siempre</p>
+              <h2 id="t-core-rules">Reglas de oro</h2>
+            </header>
+            <ul id="core-rules" class="core-rules"></ul>
+            <a class="link-btn" href="#reglas">Ver todas las reglas <svg class="icon icon--sm" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         VISTA 2 · SIMULADOR / CALCULADORA DE FECHAS
+         =================================================================== -->
+    <section class="view" id="view-simulador" data-view="simulador" aria-labelledby="t-simulador" hidden>
+      <div class="view-head">
+        <div>
+          <p class="kicker">Calculadora de fechas</p>
+          <h1 class="view-title" id="t-simulador">¿Qué tarjeta me conviene si compro el…?</h1>
+        </div>
+      </div>
+
+      <div class="panel sim-controls">
+        <label class="field-label" for="sim-date">Fecha de la compra</label>
+        <input type="date" id="sim-date" class="input input--date" required />
+        <div class="chips" id="sim-quick" role="group" aria-label="Atajos de fecha">
+          <button type="button" class="chip" data-offset="0">Hoy</button>
+          <button type="button" class="chip" data-offset="1">Mañana</button>
+          <button type="button" class="chip" data-offset="7">En 1 semana</button>
+          <button type="button" class="chip" data-offset="15">En 15 días</button>
+          <button type="button" class="chip" data-offset="30">En 30 días</button>
+          <button type="button" class="chip chip--accent" data-action="next-start">✨ Siguiente inicio de ciclo</button>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="stack">
+          <div id="sim-hero"></div>
+          <section class="panel" aria-labelledby="t-sim-ranking">
+            <header class="panel-head">
+              <h2 id="t-sim-ranking">Ranking para esa fecha</h2>
+            </header>
+            <ol id="sim-ranking" class="rank-list"></ol>
+          </section>
+        </div>
+
+        <aside class="stack">
+          <section class="panel" aria-labelledby="month-map-title">
+            <header class="panel-head">
+              <h2 id="month-map-title">Mapa del mes</h2>
+              <p class="panel-sub">Cada día toma el color de la mejor tarjeta para comprar. Toca un día para simularlo.</p>
+            </header>
+            <div id="month-map" class="month-map"></div>
+            <ul id="month-ranges" class="month-ranges"></ul>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         VISTA 3 · CALENDARIO VISUAL DE FACTURACIÓN
+         =================================================================== -->
+    <section class="view" id="view-calendario" data-view="calendario" aria-labelledby="t-calendario" hidden>
+      <div class="view-head">
+        <div>
+          <p class="kicker">Calendario visual</p>
+          <h1 class="view-title" id="t-calendario">Fechas clave de facturación</h1>
+        </div>
+      </div>
+
+      <div class="cal-layout">
+        <div class="panel cal-panel">
+          <div class="cal-toolbar">
+            <button type="button" class="icon-btn" id="cal-prev" aria-label="Mes anterior">
+              <svg class="icon" aria-hidden="true"><use href="#i-chev-left"/></svg>
+            </button>
+            <h2 class="cal-title" id="cal-title" aria-live="polite"></h2>
+            <button type="button" class="icon-btn" id="cal-next" aria-label="Mes siguiente">
+              <svg class="icon" aria-hidden="true"><use href="#i-chev-right"/></svg>
+            </button>
+            <button type="button" class="btn btn--ghost btn--sm" id="cal-today">Hoy</button>
+          </div>
+
+          <div class="cal-legend" aria-label="Leyenda">
+            <span>🟢 Inicio de ciclo <small>(mejor día para comprar)</small></span>
+            <span>🔴 Cierre de facturación</span>
+            <span>⚠️ Fecha límite de pago</span>
+          </div>
+
+          <div id="cal-filters" class="chips cal-filters" role="group" aria-label="Mostrar u ocultar tarjetas"></div>
+
+          <div class="cal-weekdays" aria-hidden="true">
+            <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+          </div>
+          <div id="cal-grid" class="cal-grid"></div>
+          <p class="cal-hint">Toca un día para ver el detalle. En computadora, pasa el cursor para una vista rápida y usa las flechas del teclado para moverte.</p>
+        </div>
+
+        <aside class="panel cal-detail" id="cal-detail" aria-live="polite"></aside>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         VISTA 4 · GESTOR DE TARJETAS (CRUD)
+         =================================================================== -->
+    <section class="view" id="view-tarjetas" data-view="tarjetas" aria-labelledby="t-tarjetas" hidden>
+      <div class="view-head">
+        <div>
+          <p class="kicker">Gestor de tarjetas</p>
+          <h1 class="view-title" id="t-tarjetas">Mis tarjetas</h1>
+        </div>
+        <button type="button" class="btn btn--primary" data-action="add-card">
+          <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Agregar tarjeta
+        </button>
+      </div>
+
+      <div id="cards-grid" class="cards-grid"></div>
+
+      <section class="panel" aria-labelledby="t-backup">
+        <header class="panel-head">
+          <h2 id="t-backup">Respaldo de datos</h2>
+          <p class="panel-sub">Tus tarjetas se guardan solo en este navegador (LocalStorage). Exporta un respaldo para llevarlas a otro dispositivo.</p>
+        </header>
+        <div class="btn-row">
+          <button type="button" class="btn btn--ghost" id="btn-export">
+            <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>Exportar JSON
+          </button>
+          <button type="button" class="btn btn--ghost" id="btn-import">
+            <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>Importar JSON
+          </button>
+          <input type="file" id="file-import" accept="application/json,.json" hidden />
+          <button type="button" class="btn btn--ghost btn--danger-text" id="btn-reset">
+            <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>Restaurar tarjetas iniciales
+          </button>
+        </div>
+      </section>
+    </section>
+
+    <!-- ===================================================================
+         VISTA 5 · REGLAS DE ORO Y RECORDATORIOS
+         =================================================================== -->
+    <section class="view" id="view-reglas" data-view="reglas" aria-labelledby="t-reglas" hidden>
+      <div class="view-head">
+        <div>
+          <p class="kicker">Reglas de oro</p>
+          <h1 class="view-title" id="t-reglas">Usa tu tarjeta sin pagar intereses</h1>
+        </div>
+      </div>
+
+      <div id="rules-grid" class="rules-grid"></div>
+      <section class="panel" id="how-it-works" aria-labelledby="t-how"></section>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>💾 Tus datos se guardan solo en este navegador. Las fechas son referenciales: confirma siempre con tu estado de cuenta.</p>
+  </footer>
+
+  <!-- =====================================================================
+       Diálogo: agregar / editar tarjeta
+       ===================================================================== -->
+  <dialog id="card-dialog" class="dialog" aria-labelledby="card-dialog-title">
+    <form id="card-form" class="dialog-body" novalidate>
+      <header class="dialog-head">
+        <h2 id="card-dialog-title">Agregar tarjeta</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Cerrar">
+          <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+        </button>
+      </header>
+
+      <div id="card-preview" class="card-preview" aria-hidden="true"></div>
+
+      <div class="field">
+        <label for="f-name">Nombre de la tarjeta / Banco</label>
+        <input id="f-name" class="input" type="text" maxlength="24" placeholder="Ej: BCP Visa" autocomplete="off" required />
+        <p class="field-error" data-error-for="name"></p>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="f-closing">Día de cierre</label>
+          <input id="f-closing" class="input" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="26" required />
+          <p class="field-hint">Día del mes en que cierra la facturación.</p>
+          <p class="field-error" data-error-for="closingDay"></p>
+        </div>
+        <div class="field">
+          <label for="f-payment">Día límite de pago</label>
+          <input id="f-payment" class="input" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="20" required />
+          <p class="field-hint">Normalmente, en el mes siguiente al cierre.</p>
+          <p class="field-error" data-error-for="paymentDay"></p>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label" id="color-label">Color identificador</span>
+        <div class="swatches" id="f-swatches" role="group" aria-labelledby="color-label"></div>
+        <label class="color-custom" for="f-color">Otro color <input id="f-color" type="color" value="#8b9bff" /></label>
+      </div>
+
+      <p class="form-summary" id="form-summary" aria-live="polite"></p>
+
+      <footer class="dialog-foot">
+        <button type="button" class="btn btn--ghost" data-close>Cancelar</button>
+        <button type="submit" class="btn btn--primary" id="card-submit">Guardar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- =====================================================================
+       Diálogo: confirmación genérica
+       ===================================================================== -->
+  <dialog id="confirm-dialog" class="dialog dialog--sm" aria-labelledby="confirm-title">
+    <form method="dialog" class="dialog-body">
+      <h2 id="confirm-title" class="dialog-title">¿Seguro?</h2>
+      <p id="confirm-message" class="dialog-text"></p>
+      <footer class="dialog-foot">
+        <button type="submit" class="btn btn--ghost" value="cancel">Cancelar</button>
+        <button type="submit" class="btn btn--danger" value="ok" id="confirm-ok">Confirmar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Notificaciones y tooltip del calendario -->
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  <div id="cal-tooltip" class="tooltip" role="tooltip" hidden></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
