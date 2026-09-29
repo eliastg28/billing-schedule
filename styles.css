@@ -1863,6 +1863,7 @@ h1, h2, h3, p {
 
 .field {
   display: grid;
+  align-content: start; /* alinea los campos vecinos aunque sus textos de ayuda midan distinto */
   gap: 6px;
   min-width: 0;
 }

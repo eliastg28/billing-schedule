@@ -37,6 +37,7 @@ import {
 } from './store.js';
 import * as backend from './backend.js';
 import * as notify from './notify.js';
+import { guardInput, sanitizeInteger, sanitizeDecimal } from './inputs.js';
 
 // #region 1. CONSTANTES ======================================================
 
@@ -1699,8 +1700,8 @@ function validateCardForm(data) {
   } else if (state.cards.some((c) => c.id !== state.editingId && c.name.toLowerCase() === data.name.toLowerCase())) {
     errors.name = 'Ya tienes una tarjeta con ese nombre. Usa uno distinto (ej: "BCP Visa").';
   }
-  if (!isValidDay(data.closingDay)) errors.closingDay = 'Ingresa un día entre 1 y 31.';
-  if (!isValidDay(data.paymentDay)) errors.paymentDay = 'Ingresa un día entre 1 y 31.';
+  if (!isValidDay(data.closingDay)) errors.closingDay = 'El día de cierre debe estar entre 1 y 31.';
+  if (!isValidDay(data.paymentDay)) errors.paymentDay = 'El día de pago debe estar entre 1 y 31.';
   return errors;
 }
 
@@ -2359,6 +2360,13 @@ function bindEvents() {
     e.target.value = ''; // permite volver a elegir el mismo archivo
   });
 
+  // Campos numéricos: solo aceptan valores posibles mientras se escribe.
+  const dayOfMonth = (text) => sanitizeInteger(text, { max: 31, maxLength: 2 });
+  guardInput($('#f-closing'), dayOfMonth);
+  guardInput($('#f-payment'), dayOfMonth);
+  guardInput($('#p-installments'), (text) => sanitizeInteger(text, { max: MAX_INSTALLMENTS, maxLength: 2 }));
+  guardInput($('#p-amount'), (text) => sanitizeDecimal(text, { max: MAX_AMOUNT, decimals: 2 }));
+
   // Formulario de tarjeta
   const cardForm = $('#card-form');
   cardForm.addEventListener('submit', onCardSubmit);
@@ -2367,6 +2375,11 @@ function bindEvents() {
     const field = Object.keys(CARD_FIELDS).find((key) => CARD_FIELDS[key].input === `#${e.target.id}`);
     if (field) showFieldErrors({ [field]: CARD_FIELDS[field] }, {});
     updateCardPreview();
+  });
+  cardForm.addEventListener('focusout', (e) => {
+    const field = Object.keys(CARD_FIELDS).find((key) => CARD_FIELDS[key].input === `#${e.target.id}`);
+    if (!field || field === 'name' || e.target.value === '') return;
+    showFieldErrors({ [field]: CARD_FIELDS[field] }, validateCardForm(readCardForm()));
   });
   $('#f-swatches').addEventListener('click', (e) => {
     const swatch = e.target.closest('[data-color]');
@@ -2384,6 +2397,11 @@ function bindEvents() {
     if (field) showFieldErrors({ [field]: PURCHASE_FIELDS[field] }, {});
     if (e.target.id === 'p-date') fillPurchaseCards();
     updatePurchasePreview();
+  });
+  purchaseForm.addEventListener('focusout', (e) => {
+    const field = Object.keys(PURCHASE_FIELDS).find((key) => PURCHASE_FIELDS[key].input === `#${e.target.id}`);
+    if (!['amount', 'installments'].includes(field) || e.target.value === '') return;
+    showFieldErrors({ [field]: PURCHASE_FIELDS[field] }, validatePurchaseForm(readPurchaseForm()));
   });
   $('#p-card').addEventListener('change', () => {
     state.purchaseCardTouched = true;

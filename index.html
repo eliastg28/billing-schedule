@@ -365,14 +365,14 @@
       <div class="field-row">
         <div class="field">
           <label for="f-closing">Día de cierre</label>
-          <input id="f-closing" class="input" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="26" required />
-          <p class="field-hint">Día del mes en que cierra la facturación.</p>
+          <input id="f-closing" class="input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" placeholder="26" required />
+          <p class="field-hint">Día del mes en que cierra la facturación, del 1 al 31.</p>
           <p class="field-error" data-error-for="closingDay"></p>
         </div>
         <div class="field">
           <label for="f-payment">Día límite de pago</label>
-          <input id="f-payment" class="input" type="number" inputmode="numeric" min="1" max="31" step="1" placeholder="20" required />
-          <p class="field-hint">Normalmente, en el mes siguiente al cierre.</p>
+          <input id="f-payment" class="input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" placeholder="20" required />
+          <p class="field-hint">Del 1 al 31. Normalmente, en el mes siguiente al cierre.</p>
           <p class="field-error" data-error-for="paymentDay"></p>
         </div>
       </div>
@@ -413,7 +413,8 @@
       <div class="field-row">
         <div class="field">
           <label for="p-amount">Monto</label>
-          <input id="p-amount" class="input" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" required />
+          <input id="p-amount" class="input" type="text" inputmode="decimal" maxlength="10" autocomplete="off" placeholder="0.00" required />
+          <p class="field-hint">Sin comas. Usa punto para decimales, ej. 1500.50</p>
           <p class="field-error" data-error-for="amount"></p>
         </div>
         <div class="field">
@@ -433,7 +434,7 @@
         </div>
         <div class="field">
           <label for="p-installments">Cuotas</label>
-          <input id="p-installments" class="input" type="number" inputmode="numeric" min="1" max="36" step="1" value="1" required />
+          <input id="p-installments" class="input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" value="1" required />
           <p class="field-error" data-error-for="installments"></p>
         </div>
       </div>

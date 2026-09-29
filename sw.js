@@ -9,7 +9,7 @@
  *  Sube CACHE_VERSION cuando cambie la lista de archivos.
  * =============================================================================
  */
-const CACHE_VERSION = 'cualtoca-v1';
+const CACHE_VERSION = 'cualtoca-v2';
 
 const APP_SHELL = [
   './',
@@ -22,6 +22,7 @@ const APP_SHELL = [
   './js/store.js',
   './js/backend.js',
   './js/notify.js',
+  './js/inputs.js',
   './js/config.js',
   './icons/icon.svg',
   './icons/icon-192.png',
