@@ -59,5 +59,6 @@ test('traduce errores de Supabase a mensajes de la app', () => {
   assert.equal(toStoreError({ code: 'P0001', message: 'FREE_CARD_LIMIT' }).code, 'limit');
   assert.equal(toStoreError({ code: '23505', message: 'duplicate key' }).code, 'duplicate');
   assert.equal(toStoreError({ code: '42501', message: 'new row violates row-level security policy' }).code, 'premium');
+  assert.equal(toStoreError({ code: '42501', message: 'permission denied for table cards' }).code, 'config');
   assert.equal(toStoreError({ message: 'Failed to fetch' }).code, 'network');
 });

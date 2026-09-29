@@ -15,6 +15,9 @@
 --        * máximo 2 tarjetas (trigger enforce_card_limit)
 --        * compras registradas solo con Premium (políticas de purchases)
 --    - Nunca se guardan números de tarjeta: solo nombre, días y color.
+--    - Los permisos de cada tabla se declaran al final (sección 8), así que
+--      funciona con la opción "Automatically expose new tables" desactivada,
+--      como recomienda Supabase.
 -- =============================================================================
 
 
@@ -56,13 +59,7 @@ as $$
   );
 $$;
 
-revoke all on function public.user_is_premium(uuid) from public;
-do $$
-begin
-  if exists (select 1 from pg_roles where rolname = 'anon') then
-    revoke all on function public.user_is_premium(uuid) from anon, authenticated;
-  end if;
-end $$;
+revoke all on function public.user_is_premium(uuid) from public, anon, authenticated;
 
 -- Versión para el usuario actual (la usan las políticas RLS y la app vía RPC).
 create or replace function public.is_premium()
@@ -308,3 +305,23 @@ create policy "reminder_settings_update_own" on public.reminder_settings
   for update to authenticated
   using (user_id = (select auth.uid()))
   with check (user_id = (select auth.uid()));
+
+
+-- 8. PERMISOS DE LA DATA API --------------------------------------------------
+-- Declarados explícitamente para no depender de "Automatically expose new tables".
+--   anon (sin sesión): sin acceso a ninguna tabla.
+--   authenticated:     solo lo que usa la app; RLS limita las filas a las propias.
+--   service_role:      Edge Functions (webhook y avisos); ignora RLS.
+
+revoke all on public.subscriptions, public.profiles, public.cards, public.purchases,
+  public.reminder_settings, public.reminder_log from anon, authenticated;
+
+grant select on public.subscriptions, public.profiles to authenticated;
+grant select, insert, update, delete on public.cards, public.purchases to authenticated;
+grant select, insert, update on public.reminder_settings to authenticated;
+
+grant all on public.subscriptions, public.profiles, public.cards, public.purchases,
+  public.reminder_settings, public.reminder_log to service_role;
+
+revoke all on function public.is_premium() from public, anon;
+grant execute on function public.is_premium() to authenticated, service_role;

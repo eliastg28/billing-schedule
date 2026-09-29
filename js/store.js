@@ -270,7 +270,12 @@ export function toStoreError(error) {
     return new StoreError('limit', `El plan gratis permite hasta ${FREE_CARD_LIMIT} tarjetas.`);
   }
   if (error?.code === '23505') return new StoreError('duplicate', 'Ya tienes una tarjeta con ese nombre.');
-  if (error?.code === '42501') return new StoreError('premium', 'Esta función es parte del plan Premium.');
+  if (error?.code === '42501') {
+    // RLS rechazó la fila (p. ej. compras sin Premium) o faltan permisos en la tabla.
+    return /row-level security/i.test(error.message || '')
+      ? new StoreError('premium', 'Esta función es parte del plan Premium.')
+      : new StoreError('config', 'El servidor no tiene los permisos configurados. Vuelve a ejecutar supabase/schema.sql.');
+  }
   if (error?.code === '23514' || error?.code === '22P02') return new StoreError('invalid', 'Algún dato no es válido.');
   return new StoreError('network', error?.message ? `Error del servidor: ${error.message}` : 'No se pudo conectar con el servidor.');
 }
