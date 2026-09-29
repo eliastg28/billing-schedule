@@ -1505,7 +1505,8 @@ function accountPanelHTML() {
       ${state.authProviders.google
         ? `<div class="divider"><span>o</span></div>
       <button type="button" class="btn btn--ghost btn--block" data-action="login-google">Continuar con Google</button>`
-        : ''}`;
+        : ''}
+      <p class="login-legal">Al continuar, aceptas los <a href="terminos.html">Términos y condiciones</a> y la <a href="privacidad.html">Política de privacidad</a>.</p>`;
   }
 
   const email = state.user.email || 'Tu cuenta';

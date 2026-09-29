@@ -494,6 +494,20 @@ h1, h2, h3, p {
   margin: 0;
 }
 
+.app-footer p + p {
+  margin-top: 6px;
+}
+
+.app-footer a {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.app-footer a:hover {
+  color: var(--primary);
+}
+
 /* 5. COMPONENTES ============================================================ */
 .panel {
   min-width: 0;
@@ -3013,6 +3027,71 @@ select.input {
 
 .settings-form fieldset > .btn {
   justify-self: start;
+}
+
+/* Páginas legales (privacidad y términos) */
+.legal-page {
+  padding-bottom: 0;
+}
+
+.legal-page .brand {
+  margin-right: auto;
+}
+
+.legal {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 20px 32px;
+}
+
+@media (min-width: 640px) {
+  .legal {
+    padding: 36px 40px 44px;
+  }
+}
+
+.legal-updated {
+  margin: 6px 0 22px;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+}
+
+.legal h2 {
+  margin: 30px 0 8px;
+  font-size: 1.12rem;
+  letter-spacing: -0.01em;
+}
+
+.legal p,
+.legal li {
+  font-size: 0.97rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.legal ul {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+  padding-left: 22px;
+}
+
+.legal strong {
+  color: var(--text);
+}
+
+.legal a {
+  color: var(--primary);
+}
+
+.login-legal {
+  margin: 14px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+.login-legal a {
+  color: var(--text-muted);
 }
 
 /* 13. MOVIMIENTO REDUCIDO =================================================== */
