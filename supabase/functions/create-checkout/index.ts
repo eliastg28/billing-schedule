@@ -8,6 +8,11 @@
  *   { url }  → la app redirige al checkout de Mercado Pago.
  *
  * Secretos: MP_ACCESS_TOKEN, APP_URL
+ * Secreto opcional, SOLO para pruebas: MP_TEST_PAYER_EMAIL
+ *   Mercado Pago exige que el pagador de prueba sea un "comprador de prueba"
+ *   con su propio correo. Si este secreto existe, se usa ese correo en vez del
+ *   del usuario. Bórralo antes de cobrar de verdad:
+ *     supabase secrets unset MP_TEST_PAYER_EMAIL
  */
 import { corsHeaders, json, requireEnv } from '../_shared/http.ts';
 import { adminClient, getUserFromRequest } from '../_shared/supabase.ts';
@@ -38,9 +43,12 @@ Deno.serve(async (req) => {
     backUrl.searchParams.set('checkout', '1');
     backUrl.hash = 'cuenta';
 
+    // En pruebas, el pago lo hace el comprador de prueba de Mercado Pago (ver arriba).
+    const payerEmail = Deno.env.get('MP_TEST_PAYER_EMAIL') || user.email;
+
     const preapproval = await createPreapproval(
       requireEnv('MP_ACCESS_TOKEN'),
-      buildPreapprovalBody({ userId: user.id, email: user.email, interval, backUrl: backUrl.toString() }),
+      buildPreapprovalBody({ userId: user.id, email: payerEmail, interval, backUrl: backUrl.toString() }),
       crypto.randomUUID(),
     );
 
