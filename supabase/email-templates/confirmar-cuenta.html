@@ -1,36 +1,134 @@
 <!--
   Plantilla "Confirm signup" de Supabase (primer ingreso de un usuario nuevo).
   Dónde: Authentication > Emails > Templates > Confirm signup
-  Asunto: Confirma tu correo · Ciclo de Tarjetas
-  Pega todo este archivo en "Message body".
+  Asunto: 💳 Confirma tu correo y empieza a usar Ciclo de Tarjetas
+  Pega todo este archivo en el cuerpo del mensaje (Message body / Source).
 -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f5fa;padding:24px 12px;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#111827">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">Un clic y listo: descubre qué tarjeta usar cada día para pagar más tarde y sin intereses.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef1f8;margin:0;padding:0">
   <tr>
-    <td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:16px;overflow:hidden">
+    <td align="center" style="padding:32px 12px">
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+        <!-- Marca -->
         <tr>
-          <td style="background-color:#8b9bff;background-image:linear-gradient(135deg,#8b9bff,#2dd4bf);padding:24px 28px">
-            <p style="margin:0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0a0d14">Ciclo de Tarjetas</p>
-            <p style="margin:4px 0 0;font-size:14px;color:#0a0d14">¿Con qué tarjeta compro hoy?</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px">
-            <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#111827">¡Bienvenido! Confirma tu correo</h1>
-            <p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#4f5b73">Haz clic en el botón para confirmar tu correo y entrar a tu cuenta. Tus tarjetas quedarán guardadas y podrás verlas en cualquier dispositivo.</p>
-            <table role="presentation" cellpadding="0" cellspacing="0">
+          <td style="padding:0 4px 16px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="border-radius:10px;background-color:#4f5fe0">
-                  <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 22px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">Confirmar mi correo</a>
-                </td>
+                <td width="36" height="36" align="center" valign="middle" style="width:36px;height:36px;border-radius:10px;background-color:#8b9bff;background-image:linear-gradient(135deg,#8b9bff,#2dd4bf);font-size:18px;line-height:36px">💳</td>
+                <td style="padding-left:10px;font-size:16px;font-weight:800;color:#111827;letter-spacing:-0.2px">Ciclo de Tarjetas</td>
               </tr>
             </table>
-            <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#4f5b73">Ábrelo en el mismo navegador donde pediste el enlace. Por seguridad, funciona una sola vez.</p>
           </td>
         </tr>
+
+        <!-- Tarjeta principal -->
         <tr>
-          <td style="padding:16px 28px;background-color:#f6f8fc;font-size:12px;line-height:1.5;color:#7d889e">Si no creaste una cuenta en Ciclo de Tarjetas, ignora este correo.</td>
+          <td style="background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 12px 32px rgba(17,24,39,0.08)">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+
+              <!-- Encabezado oscuro con tarjeta ilustrada -->
+              <tr>
+                <td style="background-color:#0f1522;background-image:linear-gradient(160deg,#1b2340 0%,#0f1522 60%,#0a0d14 100%);padding:36px 32px 32px;border-radius:20px 20px 0 0">
+                  <p style="margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:#8b9bff">Bienvenido</p>
+                  <h1 style="margin:0 0 20px;font-size:26px;line-height:1.25;font-weight:800;color:#ffffff">Confirma tu correo y empieza a comprar con cabeza</h1>
+
+                  <!-- Tarjeta de crédito ilustrada -->
+                  <table role="presentation" width="260" cellpadding="0" cellspacing="0" border="0" style="width:260px;max-width:100%">
+                    <tr>
+                      <td style="background-color:#5b4fd6;background-image:linear-gradient(135deg,#8b9bff 0%,#5b4fd6 55%,#2dd4bf 130%);border-radius:14px;padding:16px 18px">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                          <tr>
+                            <td style="padding-bottom:26px">
+                              <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td width="34" height="24" style="width:34px;height:24px;border-radius:5px;background-color:#e8c872;font-size:0;line-height:0">&nbsp;</td></tr></table>
+                            </td>
+                            <td align="right" valign="top" style="padding-bottom:26px;font-size:14px;color:#ffffff;opacity:0.85">)))</td>
+                          </tr>
+                          <tr>
+                            <td colspan="2" style="font-size:15px;font-weight:800;color:#ffffff;letter-spacing:0.3px">55 días sin intereses</td>
+                          </tr>
+                          <tr>
+                            <td colspan="2" style="padding-top:2px;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#e6e9ff">Compra el día correcto</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Mensaje y botón -->
+              <tr>
+                <td style="padding:32px 32px 8px">
+                  <p style="margin:0 0 8px;font-size:16px;line-height:1.6;color:#111827">Hola 👋</p>
+                  <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#4f5b73">Solo falta un paso para crear tu cuenta con <strong style="color:#111827">{{ .Email }}</strong>. Confírmala y tus tarjetas quedarán guardadas para verlas en cualquier dispositivo.</p>
+
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="center" style="border-radius:12px;background-color:#4f5fe0;background-image:linear-gradient(135deg,#6d7ef7,#4f5fe0)">
+                        <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:15px 28px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px">Confirmar mi correo &rarr;</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Qué puedes hacer -->
+              <tr>
+                <td style="padding:28px 32px 8px">
+                  <p style="margin:0 0 14px;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#7d889e">Lo que te espera</p>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td width="44" valign="top" style="padding:0 0 16px"><div style="width:36px;height:36px;border-radius:10px;background-color:#e7f8f0;text-align:center;line-height:36px;font-size:18px">🟢</div></td>
+                      <td valign="top" style="padding:0 0 16px">
+                        <p style="margin:0;font-size:15px;font-weight:700;color:#111827">La mejor tarjeta para hoy</p>
+                        <p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#4f5b73">Te decimos con cuál comprar para tener más días antes de pagar.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td width="44" valign="top" style="padding:0 0 16px"><div style="width:36px;height:36px;border-radius:10px;background-color:#fff4dc;text-align:center;line-height:36px;font-size:18px">🔔</div></td>
+                      <td valign="top" style="padding:0 0 16px">
+                        <p style="margin:0;font-size:15px;font-weight:700;color:#111827">Avisos antes de pagar</p>
+                        <p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#4f5b73">Recordatorios antes de cada fecha límite para no pagar intereses.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td width="44" valign="top" style="padding:0 0 8px"><div style="width:36px;height:36px;border-radius:10px;background-color:#eceeff;text-align:center;line-height:36px;font-size:18px">📅</div></td>
+                      <td valign="top" style="padding:0 0 8px">
+                        <p style="margin:0;font-size:15px;font-weight:700;color:#111827">Tu calendario de cierres y pagos</p>
+                        <p style="margin:2px 0 0;font-size:14px;line-height:1.5;color:#4f5b73">Todas tus tarjetas en un solo lugar, mes a mes.</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Nota de seguridad -->
+              <tr>
+                <td style="padding:20px 32px 32px">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="background-color:#f4f6fb;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.55;color:#4f5b73">
+                        🔒 Abre el enlace en el <strong style="color:#111827">mismo navegador</strong> donde lo pediste. Por seguridad, funciona una sola vez.
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+            </table>
+          </td>
         </tr>
+
+        <!-- Pie -->
+        <tr>
+          <td align="center" style="padding:24px 16px 0;font-size:12px;line-height:1.6;color:#8a95aa">
+            Si no creaste una cuenta en Ciclo de Tarjetas, ignora este correo.<br>
+            Ciclo de Tarjetas · Qué tarjeta usar hoy, cuándo pagar y avisos a tiempo.
+          </td>
+        </tr>
+
       </table>
     </td>
   </tr>

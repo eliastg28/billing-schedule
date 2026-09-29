@@ -1,36 +1,100 @@
 <!--
   Plantilla "Magic Link" de Supabase (ingresos siguientes de un usuario que ya existe).
   Dónde: Authentication > Emails > Templates > Magic Link
-  Asunto: Tu enlace para entrar · Ciclo de Tarjetas
-  Pega todo este archivo en "Message body".
+  Asunto: 🔑 Tu enlace para entrar a Ciclo de Tarjetas
+  Pega todo este archivo en el cuerpo del mensaje (Message body / Source).
 -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f5fa;padding:24px 12px;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#111827">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">Tu enlace para entrar sin contraseña. Funciona una sola vez.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef1f8;margin:0;padding:0">
   <tr>
-    <td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:16px;overflow:hidden">
+    <td align="center" style="padding:32px 12px">
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+
+        <!-- Marca -->
         <tr>
-          <td style="background-color:#8b9bff;background-image:linear-gradient(135deg,#8b9bff,#2dd4bf);padding:24px 28px">
-            <p style="margin:0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0a0d14">Ciclo de Tarjetas</p>
-            <p style="margin:4px 0 0;font-size:14px;color:#0a0d14">¿Con qué tarjeta compro hoy?</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px">
-            <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#111827">Tu enlace para entrar</h1>
-            <p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#4f5b73">Haz clic en el botón para entrar a tu cuenta. No necesitas contraseña.</p>
-            <table role="presentation" cellpadding="0" cellspacing="0">
+          <td style="padding:0 4px 16px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="border-radius:10px;background-color:#4f5fe0">
-                  <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 22px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">Entrar a mi cuenta</a>
-                </td>
+                <td width="36" height="36" align="center" valign="middle" style="width:36px;height:36px;border-radius:10px;background-color:#8b9bff;background-image:linear-gradient(135deg,#8b9bff,#2dd4bf);font-size:18px;line-height:36px">💳</td>
+                <td style="padding-left:10px;font-size:16px;font-weight:800;color:#111827;letter-spacing:-0.2px">Ciclo de Tarjetas</td>
               </tr>
             </table>
-            <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#4f5b73">Ábrelo en el mismo navegador donde pediste el enlace. Por seguridad, funciona una sola vez.</p>
           </td>
         </tr>
+
+        <!-- Tarjeta principal -->
         <tr>
-          <td style="padding:16px 28px;background-color:#f6f8fc;font-size:12px;line-height:1.5;color:#7d889e">Si no pediste este enlace, ignora este correo. Nadie puede entrar a tu cuenta sin él.</td>
+          <td style="background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 12px 32px rgba(17,24,39,0.08)">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+
+              <!-- Encabezado oscuro -->
+              <tr>
+                <td style="background-color:#0f1522;background-image:linear-gradient(160deg,#1b2340 0%,#0f1522 60%,#0a0d14 100%);padding:36px 32px;border-radius:20px 20px 0 0">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td width="52" height="52" align="center" valign="middle" style="width:52px;height:52px;border-radius:16px;background-color:#f5c451;background-image:linear-gradient(135deg,#ffe08a,#f5b83d);font-size:26px;line-height:52px">🔑</td>
+                    </tr>
+                  </table>
+                  <p style="margin:20px 0 6px;font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:#8b9bff">Acceso sin contraseña</p>
+                  <h1 style="margin:0;font-size:26px;line-height:1.25;font-weight:800;color:#ffffff">Tu enlace para entrar</h1>
+                </td>
+              </tr>
+
+              <!-- Mensaje y botón -->
+              <tr>
+                <td style="padding:32px 32px 8px">
+                  <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#4f5b73">Pediste entrar a Ciclo de Tarjetas con <strong style="color:#111827">{{ .Email }}</strong>. Haz clic en el botón y listo: no necesitas contraseña.</p>
+
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="center" style="border-radius:12px;background-color:#4f5fe0;background-image:linear-gradient(135deg,#6d7ef7,#4f5fe0)">
+                        <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:15px 28px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px">Entrar a mi cuenta &rarr;</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Consejo -->
+              <tr>
+                <td style="padding:28px 32px 8px">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="background-color:#fff8e6;border-left:4px solid #f5b83d;border-radius:12px;padding:16px 18px">
+                        <p style="margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#8a5a00">Regla de oro</p>
+                        <p style="margin:0;font-size:14px;line-height:1.55;color:#4f3b10">Compra siempre en <strong>1 sola cuota</strong> y paga el total antes de la fecha límite: así pagas <strong>0% de intereses</strong>.</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Nota de seguridad -->
+              <tr>
+                <td style="padding:20px 32px 32px">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="background-color:#f4f6fb;border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.55;color:#4f5b73">
+                        🔒 Abre el enlace en el <strong style="color:#111827">mismo navegador</strong> donde lo pediste. Por seguridad, funciona una sola vez.
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+            </table>
+          </td>
         </tr>
+
+        <!-- Pie -->
+        <tr>
+          <td align="center" style="padding:24px 16px 0;font-size:12px;line-height:1.6;color:#8a95aa">
+            Si no pediste este enlace, ignora este correo. Nadie puede entrar a tu cuenta sin él.<br>
+            Ciclo de Tarjetas · Qué tarjeta usar hoy, cuándo pagar y avisos a tiempo.
+          </td>
+        </tr>
+
       </table>
     </td>
   </tr>
