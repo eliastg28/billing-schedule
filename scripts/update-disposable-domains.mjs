@@ -39,7 +39,7 @@ for (let i = 0; i < domains.length; i += CHUNK) {
 
 const today = new Date().toISOString().slice(0, 10);
 const sql = `-- =============================================================================
---  CICLO DE TARJETAS · supabase/disposable-domains.sql
+--  CUÁLTOCA · supabase/disposable-domains.sql
 -- -----------------------------------------------------------------------------
 --  Generado por scripts/update-disposable-domains.mjs el ${today}.
 --  ${domains.length} dominios de correo temporal.

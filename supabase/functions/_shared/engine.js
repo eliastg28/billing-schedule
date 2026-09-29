@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- *  CICLO DE TARJETAS · js/engine.js
+ *  CUÁLTOCA · js/engine.js
  * -----------------------------------------------------------------------------
  *  Motor de fechas y ciclos de facturación. Es un módulo PURO: no toca el DOM
  *  ni el almacenamiento, así que funciona igual en el navegador y en el servidor.

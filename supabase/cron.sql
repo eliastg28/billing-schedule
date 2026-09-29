@@ -1,5 +1,5 @@
 -- =============================================================================
---  CICLO DE TARJETAS · supabase/cron.sql
+--  CUÁLTOCA · supabase/cron.sql
 -- -----------------------------------------------------------------------------
 --  Programa el envío diario de avisos por correo (Edge Function send-reminders).
 --

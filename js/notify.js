@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- *  CICLO DE TARJETAS · js/notify.js
+ *  CUÁLTOCA · js/notify.js
  * -----------------------------------------------------------------------------
  *  Service Worker (app instalable) y notificaciones del navegador.
  *  Las notificaciones se muestran cuando la app se abre o vuelve a primer plano;

@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- *  CICLO DE TARJETAS · js/plan.js
+ *  CUÁLTOCA · js/plan.js
  * -----------------------------------------------------------------------------
  *  Planes, precios y límites. La interfaz usa estas reglas para mostrar u
  *  ocultar funciones; la base de datos aplica las mismas reglas del lado del

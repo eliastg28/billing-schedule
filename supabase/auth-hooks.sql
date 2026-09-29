@@ -1,5 +1,5 @@
 -- =============================================================================
---  CICLO DE TARJETAS · supabase/auth-hooks.sql
+--  CUÁLTOCA · supabase/auth-hooks.sql
 -- -----------------------------------------------------------------------------
 --  Bloquea el registro con correos temporales (yopmail, mailinator, temp-mail…).
 --

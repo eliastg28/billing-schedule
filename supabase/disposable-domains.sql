@@ -1,5 +1,5 @@
 -- =============================================================================
---  CICLO DE TARJETAS · supabase/disposable-domains.sql
+--  CUÁLTOCA · supabase/disposable-domains.sql
 -- -----------------------------------------------------------------------------
 --  Generado por scripts/update-disposable-domains.mjs el 2026-09-29.
 --  9185 dominios de correo temporal.

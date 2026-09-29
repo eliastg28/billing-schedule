@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- *  CICLO DE TARJETAS · js/store.js
+ *  CUÁLTOCA · js/store.js
  * -----------------------------------------------------------------------------
  *  Capa de datos. Dos implementaciones con la MISMA interfaz asíncrona:
  *    - LocalStore:  LocalStorage del navegador (sin cuenta).
@@ -16,6 +16,7 @@
 import { isValidDay, fromISO, CURRENCIES, MAX_INSTALLMENTS } from './engine.js';
 import { FREE_CARD_LIMIT } from './plan.js';
 
+// Prefijo heredado de la primera versión: no cambiarlo, o los usuarios perderían sus datos guardados.
 export const KEYS = Object.freeze({
   cards: 'ciclo-tarjetas:cards:v1',
   purchases: 'ciclo-tarjetas:purchases:v1',

@@ -22,7 +22,7 @@ export const isInterval = (value: unknown): value is Interval => value === 'mont
 export function buildPreapprovalBody(options: { userId: string; email: string; interval: Interval; backUrl: string }) {
   const price = PRICES[options.interval];
   return {
-    reason: `Ciclo de Tarjetas Premium (${price.label})`,
+    reason: `CuálToca Premium (${price.label})`,
     external_reference: options.userId,
     payer_email: options.email,
     back_url: options.backUrl,

@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- *  CICLO DE TARJETAS · sw.js (Service Worker)
+ *  CUÁLTOCA · sw.js (Service Worker)
  * -----------------------------------------------------------------------------
  *  - Permite instalar la app en el celular y abrirla sin conexión.
  *  - Estrategia "red primero": con internet siempre carga la última versión;
@@ -9,7 +9,7 @@
  *  Sube CACHE_VERSION cuando cambie la lista de archivos.
  * =============================================================================
  */
-const CACHE_VERSION = 'ciclo-tarjetas-v1';
+const CACHE_VERSION = 'cualtoca-v1';
 
 const APP_SHELL = [
   './',

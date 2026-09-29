@@ -1,8 +1,8 @@
 {
-  "name": "billing-schedule",
+  "name": "cualtoca",
   "version": "2.0.0",
   "private": true,
-  "description": "Ciclo de Tarjetas: qué tarjeta usar hoy, avisos de pago y proyección de cuotas.",
+  "description": "CuálToca: qué tarjeta usar hoy, avisos de pago y proyección de cuotas.",
   "type": "module",
   "scripts": {
     "dev": "node scripts/serve.mjs",

@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- *  CICLO DE TARJETAS · js/backend.js
+ *  CUÁLTOCA · js/backend.js
  * -----------------------------------------------------------------------------
  *  Conexión con Supabase: sesión, inicio de sesión y llamadas a las Edge
  *  Functions de cobro. El cliente de Supabase se descarga solo si hay un

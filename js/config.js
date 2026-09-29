@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- *  CICLO DE TARJETAS · js/config.js
+ *  CUÁLTOCA · js/config.js
  * -----------------------------------------------------------------------------
  *  Configuración del servidor (Supabase). Mientras `supabaseUrl` y
  *  `supabaseAnonKey` estén vacíos, la app funciona en MODO LOCAL:

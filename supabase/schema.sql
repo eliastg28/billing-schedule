@@ -1,5 +1,5 @@
 -- =============================================================================
---  CICLO DE TARJETAS · supabase/schema.sql
+--  CUÁLTOCA · supabase/schema.sql
 -- -----------------------------------------------------------------------------
 --  Esquema de la base de datos (Supabase / PostgreSQL).
 --  Cómo usarlo: Supabase > SQL Editor > pega este archivo completo > Run.

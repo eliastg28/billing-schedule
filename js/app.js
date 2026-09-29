@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- *  CICLO DE TARJETAS · js/app.js (interfaz)
+ *  CUÁLTOCA · js/app.js (interfaz)
  * -----------------------------------------------------------------------------
  *  SPA en JavaScript puro (módulos ES). Este archivo maneja la interfaz:
  *  vistas, formularios, planes (Gratis / Premium), avisos y cuenta.
@@ -40,6 +40,7 @@ import * as notify from './notify.js';
 
 // #region 1. CONSTANTES ======================================================
 
+// Prefijo heredado de la primera versión: no cambiarlo, o se perderían las preferencias guardadas.
 const THEME_KEY = 'ciclo-tarjetas:theme';
 const DEV_PLAN_KEY = 'ciclo-tarjetas:dev-plan';
 const DEVICE_KEY = 'ciclo-tarjetas:device:v1';
@@ -59,7 +60,7 @@ const PRESET_COLORS = [
 
 const ROUTES = ['inicio', 'simulador', 'calendario', 'pagos', 'tarjetas', 'reglas', 'cuenta'];
 const ROUTE_TITLES = {
-  inicio: '¿Con qué tarjeta compro hoy?',
+  inicio: '¿Qué tarjeta toca hoy?',
   simulador: 'Simulador de compras',
   calendario: 'Calendario de facturación',
   pagos: 'Proyección de pagos',
@@ -655,7 +656,7 @@ function heroHTML(ranked, date, isToday, cards) {
   return `
     <article class="hero" style="${cardVars(card)}">
       <div class="hero-top">
-        <p class="eyebrow">⭐ ${isToday ? 'Mejor tarjeta para comprar hoy' : `Mejor tarjeta para el ${fmtShort(date)}`}</p>
+        <p class="eyebrow">⭐ ${isToday ? 'Hoy toca' : `El ${fmtShort(date)} toca`}</p>
         <span class="badge badge--${tier.key}">${tier.label}</span>
       </div>
       <div class="hero-main">
@@ -1850,7 +1851,7 @@ async function replaceAllCards(list, { title, successText }) {
 
 function exportCards() {
   const payload = {
-    app: 'ciclo-tarjetas',
+    app: 'cualtoca',
     version: 1,
     exportedAt: new Date().toISOString(),
     cards: state.cards,
@@ -1859,7 +1860,7 @@ function exportCards() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `tarjetas-${toISO(state.today)}.json`;
+  link.download = `cualtoca-tarjetas-${toISO(state.today)}.json`;
   document.body.append(link);
   link.click();
   link.remove();
@@ -2156,7 +2157,7 @@ function applyRoute() {
     if (link.dataset.route === route) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
-  document.title = `${ROUTE_TITLES[route]} · Ciclo de Tarjetas`;
+  document.title = `${ROUTE_TITLES[route]} · CuálToca`;
   hideTooltip();
   window.scrollTo(0, 0);
 }
@@ -2279,7 +2280,7 @@ function onActionClick(event) {
       location.reload();
       break;
     case 'test-notification':
-      notify.showNotification('Ciclo de Tarjetas', { body: 'Así se verán tus avisos de pago.', tag: 'prueba' })
+      notify.showNotification('CuálToca', { body: 'Así se verán tus avisos de pago.', tag: 'prueba' })
         .then((shown) => { if (!shown) toast('No se pudo mostrar la notificación.', 'error'); });
       break;
     default:

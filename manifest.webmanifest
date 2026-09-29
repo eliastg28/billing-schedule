@@ -1,7 +1,7 @@
 {
-  "name": "Ciclo de Tarjetas",
-  "short_name": "Tarjetas",
-  "description": "Qué tarjeta de crédito usar hoy, cuándo pagar y avisos antes de cada vencimiento.",
+  "name": "CuálToca",
+  "short_name": "CuálToca",
+  "description": "La tarjeta que toca hoy: qué tarjeta de crédito usar, cuándo pagar y avisos antes de cada vencimiento.",
   "lang": "es-PE",
   "start_url": "./#inicio",
   "scope": "./",

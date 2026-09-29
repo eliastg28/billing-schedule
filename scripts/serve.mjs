@@ -57,5 +57,5 @@ server.on('error', (err) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Ciclo de Tarjetas en http://localhost:${PORT}  (Ctrl+C para detener)`);
+  console.log(`CuálToca en http://localhost:${PORT}  (Ctrl+C para detener)`);
 });

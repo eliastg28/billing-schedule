@@ -1,4 +1,6 @@
-# billing-schedule · Ciclo de Tarjetas
+# CuálToca
+
+**La tarjeta que toca hoy.**
 
 Aplicación web para gestionar los ciclos de facturación de tarjetas de crédito y saber qué tarjeta conviene usar cada día para tener más días de crédito sin intereses.
 
@@ -123,7 +125,7 @@ supabase secrets set \
   MP_ACCESS_TOKEN=... \
   MP_WEBHOOK_SECRET=... \
   RESEND_API_KEY=... \
-  REMINDERS_FROM="Ciclo de Tarjetas <avisos@tu-dominio.com>" \
+  REMINDERS_FROM="CuálToca <avisos@tu-dominio.com>" \
   REMINDERS_CRON_SECRET=un-texto-largo-y-aleatorio
 
 supabase functions deploy create-checkout

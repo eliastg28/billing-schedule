@@ -39,13 +39,13 @@ function emailHtml(alerts: Alert[], today: Date, appUrl: string): string {
     })
     .join('');
   const button = appUrl
-    ? `<tr><td style="padding-top:8px"><a href="${escapeHtml(appUrl)}" style="display:inline-block;background:#4f5fe0;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700">Abrir Ciclo de Tarjetas</a></td></tr>`
+    ? `<tr><td style="padding-top:8px"><a href="${escapeHtml(appUrl)}" style="display:inline-block;background:#4f5fe0;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700">Abrir CuálToca</a></td></tr>`
     : '';
   return `<!doctype html>
 <html lang="es"><body style="margin:0;padding:24px;background:#f3f5fa;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#111827">
   <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:16px;padding:24px">
     <tr><td>
-      <p style="margin:0;color:#4f5fe0;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Ciclo de Tarjetas</p>
+      <p style="margin:0;color:#4f5fe0;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase">CuálToca</p>
       <h1 style="margin:4px 0 4px;font-size:20px">Tus avisos de hoy</h1>
       <p style="margin:0 0 16px;color:#4f5b73;font-size:14px">${escapeHtml(fmtFull(today))}</p>
     </td></tr>
