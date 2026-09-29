@@ -1,0 +1,11 @@
+# Dependencias y archivos locales
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Secretos: nunca subir claves
+.env
+.env.*
+supabase/.env
+supabase/.temp/
+supabase/.branches/

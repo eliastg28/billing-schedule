@@ -14,7 +14,8 @@
      9. Calendario
     10. Gestor de tarjetas y tarjeta visual
     11. Diálogos, formularios, toasts y tooltip
-    12. Movimiento reducido
+    12. Planes, cuenta, avisos y pagos
+    13. Movimiento reducido
    ========================================================================== */
 
 /* 1. TOKENS DE DISEÑO ======================================================= */
@@ -52,6 +53,10 @@
   --danger: #fb7185;
   --danger-strong: #e11d48;
   --danger-soft: rgba(251, 113, 133, 0.14);
+  --premium: #f5c451;
+  --premium-text: #f7d27a;
+  --premium-soft: rgba(245, 196, 81, 0.13);
+  --premium-gradient: linear-gradient(135deg, #ffe08a, #f5b83d);
 
   /* Calidad de la recomendación */
   --tier-excelente: #34d399;
@@ -105,6 +110,9 @@
   --danger: #e11d48;
   --danger-strong: #be123c;
   --danger-soft: rgba(225, 29, 72, 0.09);
+  --premium: #d99a0b;
+  --premium-text: #8a5a00;
+  --premium-soft: rgba(217, 154, 11, 0.12);
 
   --tier-excelente: #059669;
   --tier-buena: #4d7c0f;
@@ -2030,7 +2038,983 @@ h1, h2, h3, p {
   height: 8px;
 }
 
-/* 12. MOVIMIENTO REDUCIDO =================================================== */
+/* 12. PLANES, CUENTA, AVISOS Y PAGOS (Premium) ============================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+.file-warning {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--warning-soft);
+  border-bottom: 1px solid var(--warning);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.file-warning code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--surface-3);
+}
+
+/* Encabezado: chip de cuenta / plan */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.plan-chip:hover {
+  background: var(--surface-3);
+}
+
+.plan-chip[aria-current="page"] {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.plan-chip.is-premium {
+  border-color: color-mix(in srgb, var(--premium) 60%, transparent);
+  background: var(--premium-soft);
+  color: var(--premium-text);
+}
+
+/* Navegación móvil con 6 secciones */
+@media (max-width: 959px) {
+  .app-nav {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .nav-link {
+    font-size: 0.625rem;
+  }
+}
+
+/* Botón y distintivos Premium */
+.btn--premium {
+  background: var(--premium-gradient);
+  color: #1b1405;
+  box-shadow: 0 10px 24px -14px rgba(245, 196, 81, 0.9);
+}
+
+.btn--premium:hover {
+  filter: brightness(1.06);
+}
+
+.plan-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-3);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+
+.plan-pill--premium {
+  border-color: color-mix(in srgb, var(--premium) 55%, transparent);
+  background: var(--premium-soft);
+  color: var(--premium-text);
+}
+
+.panel-head h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.link-btn--inline {
+  margin: 0;
+}
+
+.btn-row--center {
+  justify-content: center;
+}
+
+select.input {
+  appearance: none;
+  padding-right: 36px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--border-strong);
+  border-top-color: var(--primary);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Lista de beneficios */
+.benefits {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.benefits .icon {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  color: var(--success);
+}
+
+/* Avisos en la portada */
+.alerts-panel {
+  padding: 16px;
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, var(--warning-soft), var(--surface) 70%);
+  border: 1px solid color-mix(in srgb, var(--warning) 45%, var(--border));
+  box-shadow: var(--shadow);
+}
+
+.alerts-panel.is-empty {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.alerts-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.alerts-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.alerts-head .link-btn {
+  margin: 0;
+}
+
+.alerts-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.alert-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alert-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border-left: 4px solid var(--c);
+}
+
+.alert-item--danger {
+  background: var(--danger-soft);
+}
+
+.alert-item--warning {
+  background: var(--warning-soft);
+}
+
+.alert-icon {
+  flex: none;
+  line-height: 1.4;
+}
+
+.alert-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.alert-body {
+  margin: 2px 0 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* Invitación a Premium */
+.promo {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--premium) 45%, var(--border));
+  background:
+    radial-gradient(120% 120% at 100% 0%, var(--premium-soft), transparent 60%),
+    var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.promo h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+/* Uso del plan en Tarjetas */
+.usage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.usage .link-btn {
+  margin: 0 0 0 auto;
+}
+
+.meter {
+  position: relative;
+  display: inline-block;
+  width: 120px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-3);
+}
+
+.meter > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+/* Tarjetas bloqueadas */
+.card-item.is-locked .mini-card {
+  filter: grayscale(0.85) brightness(0.8);
+}
+
+.card-item.is-locked .card-facts {
+  opacity: 0.6;
+}
+
+.locked-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--premium-soft);
+  font-size: 0.82rem;
+}
+
+.locked-banner .link-btn {
+  margin: 0 0 0 auto;
+  font-size: 0.82rem;
+}
+
+.card-add--locked {
+  border-color: color-mix(in srgb, var(--premium) 45%, var(--border-strong));
+  color: var(--text);
+}
+
+.card-add--locked small {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.card-add--locked:hover {
+  border-color: var(--premium);
+  background: var(--premium-soft);
+  color: var(--text);
+}
+
+/* Vista bloqueada (Pagos en plan Gratis) */
+.locked-view {
+  position: relative;
+  display: grid;
+  min-height: 360px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.locked-preview {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 24px;
+  filter: blur(5px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.locked-cta {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  max-width: 440px;
+  margin: 24px 16px;
+  padding: 24px;
+  text-align: center;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--premium) 45%, var(--border));
+  box-shadow: var(--shadow-lg);
+}
+
+.locked-cta h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.locked-cta p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+/* Resumen de pagos */
+.stat-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  margin-bottom: 16px;
+}
+
+.stat {
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.stat-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  margin: 6px 0 2px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-sub {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+/* Pagos agrupados por fecha */
+.pay-groups {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pay-group {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.pay-group.is-soon {
+  border-color: color-mix(in srgb, var(--warning) 55%, var(--border));
+}
+
+.pay-date {
+  width: 52px;
+  height: 56px;
+  flex: none;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  border-radius: 12px;
+  background: var(--surface-3);
+  border-top: 3px solid var(--warning);
+}
+
+.pay-day {
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.pay-mon {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pay-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.pay-when {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.pay-cards {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pay-cards details {
+  border-radius: 10px;
+  background: var(--surface);
+  border-left: 4px solid var(--c);
+}
+
+.pay-cards summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.pay-cards summary::-webkit-details-marker {
+  display: none;
+}
+
+.pay-card-name {
+  font-weight: 700;
+}
+
+.pay-amount {
+  margin: 0 0 0 auto;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pay-closing {
+  margin: 0;
+  padding: 0 12px 6px;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+.pay-items {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0 12px 10px;
+  list-style: none;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.pay-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pay-total {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  text-align: right;
+  color: var(--text-muted);
+}
+
+/* Compras registradas */
+.purchase-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.purchase {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.purchase.is-paid {
+  opacity: 0.55;
+}
+
+.purchase-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.purchase-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.purchase-sub {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.purchase-amount {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.icon-btn--sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: var(--text-muted);
+}
+
+.icon-btn--sm:hover {
+  color: var(--danger);
+}
+
+/* Cuenta */
+.account-grid {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .account-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  #plans-panel {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
+.login-form {
+  display: grid;
+  gap: 8px;
+}
+
+.input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.input-row .input {
+  flex: 1 1 200px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b9bff, #2dd4bf);
+  color: #0a0d14;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.account-email {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.dev-box {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-2);
+}
+
+.dev-box p {
+  margin: 0;
+}
+
+.segmented {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-3);
+}
+
+.segmented button {
+  min-height: 36px;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.segmented button.is-active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+/* Tabla de planes */
+.plans-table {
+  width: 100%;
+  margin-bottom: 16px;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.plans-table th,
+.plans-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.plans-table thead th {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.plans-table tbody th {
+  font-weight: 500;
+  text-align: left;
+}
+
+.plans-table .yes {
+  display: inline-grid;
+  color: var(--success);
+}
+
+.plans-table .no {
+  color: var(--text-faint);
+}
+
+.price-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.price-option {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 16px 10px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.price-option:hover {
+  border-color: var(--premium);
+  transform: translateY(-1px);
+}
+
+.price-option--best {
+  border-color: color-mix(in srgb, var(--premium) 60%, var(--border-strong));
+  background: linear-gradient(160deg, var(--premium-soft), var(--surface-2) 70%);
+}
+
+.price {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-period {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.price-save {
+  position: absolute;
+  top: -10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--premium-gradient);
+  color: #1b1405;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+#plans-panel > .btn {
+  margin-top: 12px;
+}
+
+/* Preferencias de avisos */
+.settings-form fieldset {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.settings-form fieldset[disabled] {
+  opacity: 0.5;
+}
+
+#alerts-settings > .note {
+  margin-bottom: 14px;
+}
+
+.switch {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.switch-ui {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  transition: background-color 0.15s ease;
+}
+
+.switch-ui::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.switch input:checked + .switch-ui {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.switch input:checked + .switch-ui::after {
+  transform: translateX(18px);
+  background: var(--on-primary);
+}
+
+.switch input:focus-visible + .switch-ui {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.switch input:disabled + .switch-ui {
+  opacity: 0.5;
+}
+
+.switch-text {
+  display: grid;
+  gap: 2px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.switch-text small {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* Diálogo de Premium */
+.upgrade {
+  text-align: center;
+}
+
+.upgrade .benefits {
+  justify-self: center;
+  text-align: left;
+}
+
+.upgrade-badge {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  border-radius: 18px;
+  background: var(--premium-gradient);
+  font-size: 1.6rem;
+  box-shadow: 0 12px 30px -12px rgba(245, 196, 81, 0.9);
+}
+
+.upgrade-price {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.upgrade .dialog-foot {
+  justify-content: center;
+}
+
+/* Botones deshabilitados o esperando al servidor */
+.btn:disabled,
+.btn[aria-busy="true"],
+.price-option:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.settings-form fieldset > .btn {
+  justify-self: start;
+}
+
+/* 13. MOVIMIENTO REDUCIDO =================================================== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

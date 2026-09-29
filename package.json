@@ -1,0 +1,14 @@
+{
+  "name": "billing-schedule",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Ciclo de Tarjetas: qué tarjeta usar hoy, avisos de pago y proyección de cuotas.",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

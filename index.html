@@ -6,7 +6,9 @@
   <meta name="description" content="Gestiona los ciclos de facturación de tus tarjetas de crédito y descubre qué tarjeta usar hoy para tener más días de crédito sin intereses." />
   <meta name="theme-color" content="#0a0d14" />
   <title>Ciclo de Tarjetas · ¿Con qué tarjeta compro hoy?</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='12' width='56' height='40' rx='8' fill='%238b9bff'/%3E%3Crect x='4' y='22' width='56' height='8' fill='%230a0d14'/%3E%3Crect x='12' y='38' width='14' height='6' rx='2' fill='%23ffffff'/%3E%3C/svg%3E" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
   <script>
     /* Aplica el tema guardado antes del primer pintado para evitar parpadeos. */
@@ -21,6 +23,16 @@
 <body>
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
+  <!-- Los módulos de JavaScript no cargan desde file://: se necesita un servidor local. -->
+  <div class="file-warning" id="file-warning" hidden>
+    <strong>Abre la app con el servidor local.</strong>
+    Esta versión usa módulos de JavaScript, que el navegador no carga desde un archivo.
+    Ejecuta <code>node scripts/serve.mjs</code> y entra a <code>http://localhost:5173</code>.
+  </div>
+  <script>
+    if (location.protocol === 'file:') document.getElementById('file-warning').hidden = false;
+  </script>
+
   <!-- =====================================================================
        Sprite de íconos SVG (se reutilizan con <use href="#i-...">)
        ===================================================================== -->
@@ -30,6 +42,7 @@
     <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
     <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol>
     <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></symbol>
     <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
@@ -42,6 +55,12 @@
     <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
     <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
   </svg>
 
   <!-- =====================================================================
@@ -67,6 +86,9 @@
         <a class="nav-link" href="#calendario" data-route="calendario">
           <svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg><span>Calendario</span>
         </a>
+        <a class="nav-link" href="#pagos" data-route="pagos">
+          <svg class="icon" aria-hidden="true"><use href="#i-wallet"/></svg><span>Pagos</span>
+        </a>
         <a class="nav-link" href="#tarjetas" data-route="tarjetas">
           <svg class="icon" aria-hidden="true"><use href="#i-card"/></svg><span>Tarjetas</span>
         </a>
@@ -75,10 +97,15 @@
         </a>
       </nav>
 
-      <button type="button" class="icon-btn theme-toggle" id="theme-toggle" aria-label="Cambiar a tema claro">
-        <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
-        <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
-      </button>
+      <div class="header-actions">
+        <a class="plan-chip" id="plan-chip" href="#cuenta" data-route="cuenta">
+          <svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><span>Cuenta</span>
+        </a>
+        <button type="button" class="icon-btn theme-toggle" id="theme-toggle" aria-label="Cambiar a tema claro">
+          <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+          <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -97,6 +124,7 @@
 
       <div class="split">
         <div class="stack">
+          <div id="alerts" hidden></div>
           <div id="hero"></div>
           <section class="panel" aria-labelledby="t-ranking">
             <header class="panel-head">
@@ -108,6 +136,8 @@
         </div>
 
         <aside class="stack">
+          <div id="premium-promo" hidden></div>
+
           <section class="panel" aria-labelledby="t-upcoming">
             <header class="panel-head">
               <h2 id="t-upcoming">Próximos 30 días</h2>
@@ -220,7 +250,23 @@
     </section>
 
     <!-- ===================================================================
-         VISTA 4 · GESTOR DE TARJETAS (CRUD)
+         VISTA 4 · PROYECCIÓN DE PAGOS (Premium)
+         =================================================================== -->
+    <section class="view" id="view-pagos" data-view="pagos" aria-labelledby="t-pagos" hidden>
+      <div class="view-head">
+        <div>
+          <p class="kicker">Proyección de pagos</p>
+          <h1 class="view-title" id="t-pagos">¿Cuánto pagaré y cuándo?</h1>
+        </div>
+        <button type="button" class="btn btn--primary" data-action="add-purchase">
+          <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Registrar compra
+        </button>
+      </div>
+      <div id="payments"></div>
+    </section>
+
+    <!-- ===================================================================
+         VISTA 5 · GESTOR DE TARJETAS (CRUD)
          =================================================================== -->
     <section class="view" id="view-tarjetas" data-view="tarjetas" aria-labelledby="t-tarjetas" hidden>
       <div class="view-head">
@@ -233,12 +279,13 @@
         </button>
       </div>
 
+      <div id="cards-usage"></div>
       <div id="cards-grid" class="cards-grid"></div>
 
       <section class="panel" aria-labelledby="t-backup">
         <header class="panel-head">
           <h2 id="t-backup">Respaldo de datos</h2>
-          <p class="panel-sub">Tus tarjetas se guardan solo en este navegador (LocalStorage). Exporta un respaldo para llevarlas a otro dispositivo.</p>
+          <p class="panel-sub" id="backup-sub">Exporta un respaldo de tus tarjetas o impórtalo en otro dispositivo.</p>
         </header>
         <div class="btn-row">
           <button type="button" class="btn btn--ghost" id="btn-export">
@@ -248,15 +295,15 @@
             <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>Importar JSON
           </button>
           <input type="file" id="file-import" accept="application/json,.json" hidden />
-          <button type="button" class="btn btn--ghost btn--danger-text" id="btn-reset">
-            <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>Restaurar tarjetas iniciales
+          <button type="button" class="btn btn--ghost" data-action="load-examples">
+            <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>Cargar tarjetas de ejemplo
           </button>
         </div>
       </section>
     </section>
 
     <!-- ===================================================================
-         VISTA 5 · REGLAS DE ORO Y RECORDATORIOS
+         VISTA 6 · REGLAS DE ORO Y RECORDATORIOS
          =================================================================== -->
     <section class="view" id="view-reglas" data-view="reglas" aria-labelledby="t-reglas" hidden>
       <div class="view-head">
@@ -269,10 +316,28 @@
       <div id="rules-grid" class="rules-grid"></div>
       <section class="panel" id="how-it-works" aria-labelledby="t-how"></section>
     </section>
+
+    <!-- ===================================================================
+         VISTA 7 · CUENTA, PLAN Y AVISOS
+         =================================================================== -->
+    <section class="view" id="view-cuenta" data-view="cuenta" aria-labelledby="t-cuenta" hidden>
+      <div class="view-head">
+        <div>
+          <p class="kicker">Tu cuenta</p>
+          <h1 class="view-title" id="t-cuenta">Cuenta, plan y avisos</h1>
+        </div>
+      </div>
+
+      <div class="account-grid">
+        <section class="panel" id="account-panel" aria-label="Cuenta"></section>
+        <section class="panel" id="plans-panel" aria-label="Planes"></section>
+        <section class="panel" id="alerts-settings" aria-label="Avisos"></section>
+      </div>
+    </section>
   </main>
 
   <footer class="app-footer">
-    <p>💾 Tus datos se guardan solo en este navegador. Las fechas son referenciales: confirma siempre con tu estado de cuenta.</p>
+    <p>Las fechas son referenciales: confirma siempre con tu estado de cuenta. Esta app no es asesoría financiera.</p>
   </footer>
 
   <!-- =====================================================================
@@ -326,6 +391,84 @@
   </dialog>
 
   <!-- =====================================================================
+       Diálogo: registrar compra (Premium)
+       ===================================================================== -->
+  <dialog id="purchase-dialog" class="dialog" aria-labelledby="purchase-dialog-title">
+    <form id="purchase-form" class="dialog-body" novalidate>
+      <header class="dialog-head">
+        <h2 id="purchase-dialog-title">Registrar compra</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Cerrar">
+          <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+        </button>
+      </header>
+
+      <div class="field">
+        <label for="p-description">Descripción</label>
+        <input id="p-description" class="input" type="text" maxlength="60" placeholder="Ej: Zapatillas" autocomplete="off" required />
+        <p class="field-error" data-error-for="description"></p>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="p-amount">Monto</label>
+          <input id="p-amount" class="input" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" required />
+          <p class="field-error" data-error-for="amount"></p>
+        </div>
+        <div class="field">
+          <label for="p-currency">Moneda</label>
+          <select id="p-currency" class="input">
+            <option value="PEN">Soles (S/)</option>
+            <option value="USD">Dólares (US$)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="p-date">Fecha de compra</label>
+          <input id="p-date" class="input" type="date" required />
+          <p class="field-error" data-error-for="date"></p>
+        </div>
+        <div class="field">
+          <label for="p-installments">Cuotas</label>
+          <input id="p-installments" class="input" type="number" inputmode="numeric" min="1" max="36" step="1" value="1" required />
+          <p class="field-error" data-error-for="installments"></p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="p-card">Tarjeta</label>
+        <select id="p-card" class="input"></select>
+        <p class="field-error" data-error-for="cardId"></p>
+      </div>
+
+      <p class="form-summary" id="purchase-summary" aria-live="polite"></p>
+
+      <footer class="dialog-foot">
+        <button type="button" class="btn btn--ghost" data-close>Cancelar</button>
+        <button type="submit" class="btn btn--primary" id="purchase-submit">Registrar compra</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- =====================================================================
+       Diálogo: invitación a Premium
+       ===================================================================== -->
+  <dialog id="upgrade-dialog" class="dialog dialog--sm" aria-labelledby="upgrade-title">
+    <form method="dialog" class="dialog-body upgrade">
+      <div class="upgrade-badge" aria-hidden="true">⭐</div>
+      <h2 id="upgrade-title" class="dialog-title">Hazte Premium</h2>
+      <p id="upgrade-text" class="dialog-text"></p>
+      <ul class="benefits" id="upgrade-benefits"></ul>
+      <p class="upgrade-price" id="upgrade-price"></p>
+      <footer class="dialog-foot">
+        <button type="submit" class="btn btn--ghost" value="cancel">Ahora no</button>
+        <button type="submit" class="btn btn--premium" value="plans">Ver planes</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- =====================================================================
        Diálogo: confirmación genérica
        ===================================================================== -->
   <dialog id="confirm-dialog" class="dialog dialog--sm" aria-labelledby="confirm-title">
@@ -333,7 +476,7 @@
       <h2 id="confirm-title" class="dialog-title">¿Seguro?</h2>
       <p id="confirm-message" class="dialog-text"></p>
       <footer class="dialog-foot">
-        <button type="submit" class="btn btn--ghost" value="cancel">Cancelar</button>
+        <button type="submit" class="btn btn--ghost" value="cancel" id="confirm-cancel">Cancelar</button>
         <button type="submit" class="btn btn--danger" value="ok" id="confirm-ok">Confirmar</button>
       </footer>
     </form>
@@ -343,6 +486,6 @@
   <div id="toast-region" class="toast-region" aria-live="polite"></div>
   <div id="cal-tooltip" class="tooltip" role="tooltip" hidden></div>
 
-  <script src="app.js" defer></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
