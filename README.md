@@ -114,7 +114,9 @@ appUrl: 'https://TU-DOMINIO/',
 
 La clave pública puede estar en el código: la seguridad la dan las políticas RLS. **Nunca** pongas la clave `service_role` en el navegador.
 
-Mientras `paymentsEnabled` sea `false`, los planes se muestran como "Muy pronto" y nadie puede pagar ni empezar la prueba gratis. Cámbialo a `true` cuando termines el paso 5 y pruebes un cobro.
+Mientras `paymentsEnabled` sea `false`, los planes se muestran como "Muy pronto" y nadie puede pagar. Cámbialo a `true` cuando termines el paso 5 y pruebes un cobro.
+
+La prueba gratis tiene su propio interruptor, `trialEnabled`: se puede activar antes que los cobros para probar Premium. Requiere haber ejecutado el `supabase/schema.sql` actualizado.
 
 Para el pago con Yape, pon también la **Public Key** de Mercado Pago en `mercadoPagoPublicKey` (es pública por diseño). Si la dejas vacía, solo se ofrece la suscripción con tarjeta.
 

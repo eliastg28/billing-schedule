@@ -171,7 +171,7 @@ export async function createYapeToken({ phoneNumber, otp }) {
   try {
     result = await mp.yape({ phoneNumber, otp }).create();
   } catch {
-    throw new Error('Revisa tu número de celular y el código de aprobación. Si el código venció, genera uno nuevo en Yape.');
+    throw new Error('Revisa tu número de celular y el código de aprobación. Si el código venció, copia el nuevo en Yape > Aprobar compras.');
   }
   const token = typeof result === 'string' ? result : result?.id;
   if (!token) throw new Error('Yape no respondió. Intenta de nuevo con un código nuevo.');

@@ -126,7 +126,7 @@ export function yapeRejectionMessage(statusDetail: string | undefined): string {
     case 'cc_rejected_max_attempts':
       return 'Superaste el número de intentos. Espera unos minutos y usa un código nuevo.';
     case 'cc_rejected_card_type_not_allowed':
-      return 'Tu cuenta de Yape no permite este pago. Prueba con la suscripción con tarjeta.';
+      return 'Tu Yape no permite este pago. Revisa que tengas activadas las Compras por internet y POS en Yape.';
     default:
       return 'Yape rechazó el pago. Intenta de nuevo con un código nuevo.';
   }

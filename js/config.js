@@ -27,12 +27,17 @@ export const CONFIG = Object.freeze({
   /** Muestra el simulador de plan en modo local. No tiene efecto con Supabase conectado. */
   devTools: true,
   /**
-   * Cobros con Mercado Pago y prueba gratis. Mientras sea false, los planes se
-   * muestran como "Muy pronto" y nadie puede pagar ni empezar la prueba.
-   * Actívalo cuando las Edge Functions de cobro estén desplegadas y probadas
-   * (ver README).
+   * Cobros con Mercado Pago. Mientras sea false, los planes se muestran como
+   * "Muy pronto" y nadie puede pagar. Actívalo cuando las Edge Functions de
+   * cobro estén desplegadas y probadas (ver README).
    */
   paymentsEnabled: false,
+  /**
+   * Prueba gratis de Premium (1 mes, sin medio de pago) para cuentas nuevas.
+   * Es independiente de los cobros: se puede activar antes para probar
+   * Premium. Requiere haber ejecutado el supabase/schema.sql actualizado.
+   */
+  trialEnabled: true,
   /**
    * Public Key de Mercado Pago (Tus integraciones > Credenciales). Es pública
    * por diseño y solo sirve para crear el token del pago con Yape. Vacía = el
