@@ -2,6 +2,8 @@
   Plantilla "Magic Link" de Supabase (ingresos siguientes de un usuario que ya existe).
   Dónde: Authentication > Emails > Templates > Magic Link
   Asunto: 🔑 Tu enlace para entrar a CuálToca
+  Sin degradados a propósito: Gmail en modo oscuro invierte textos y fondos sólidos,
+  pero no los degradados; con colores sólidos todo sigue legible.
   Pega todo este archivo en el cuerpo del mensaje (Message body / Source).
 -->
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">Tu enlace para entrar sin contraseña. Funciona una sola vez.</div>
@@ -16,7 +18,7 @@
           <td style="padding:0 4px 16px">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td width="36" height="36" align="center" valign="middle" style="width:36px;height:36px;border-radius:10px;background-color:#8b9bff;background-image:linear-gradient(135deg,#8b9bff,#2dd4bf);font-size:18px;line-height:36px">💳</td>
+                <td width="36" height="36" align="center" valign="middle" style="width:36px;height:36px;border-radius:10px;background-color:#8b9bff;font-size:18px;line-height:36px">💳</td>
                 <td style="padding-left:10px;font-size:16px;font-weight:800;color:#111827;letter-spacing:-0.2px">CuálToca</td>
               </tr>
             </table>
@@ -30,10 +32,10 @@
 
               <!-- Encabezado oscuro -->
               <tr>
-                <td style="background-color:#0f1522;background-image:linear-gradient(160deg,#1b2340 0%,#0f1522 60%,#0a0d14 100%);padding:36px 32px;border-radius:20px 20px 0 0">
+                <td style="background-color:#0f1522;padding:36px 32px;border-radius:20px 20px 0 0">
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                     <tr>
-                      <td width="52" height="52" align="center" valign="middle" style="width:52px;height:52px;border-radius:16px;background-color:#f5c451;background-image:linear-gradient(135deg,#ffe08a,#f5b83d);font-size:26px;line-height:52px">🔑</td>
+                      <td width="52" height="52" align="center" valign="middle" style="width:52px;height:52px;border-radius:16px;background-color:#f5c451;font-size:26px;line-height:52px">🔑</td>
                     </tr>
                   </table>
                   <p style="margin:20px 0 6px;font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:#8b9bff">Acceso sin contraseña</p>
@@ -48,7 +50,7 @@
 
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                     <tr>
-                      <td align="center" style="border-radius:12px;background-color:#4f5fe0;background-image:linear-gradient(135deg,#6d7ef7,#4f5fe0)">
+                      <td align="center" style="border-radius:12px;background-color:#4f5fe0;">
                         <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:15px 28px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px">Entrar a mi cuenta &rarr;</a>
                       </td>
                     </tr>
