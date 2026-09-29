@@ -123,3 +123,64 @@ export async function cancelSubscription(client) {
   if (error) throw await functionError(error);
   return data;
 }
+
+/** Activa la prueba gratis de Premium (una vez por persona). Devuelve la fecha en que termina. */
+export async function startTrial(client) {
+  const { data, error } = await client.rpc('start_trial');
+  if (error) {
+    if (/TRIAL_NOT_AVAILABLE/.test(error.message || '')) {
+      throw new Error('La prueba gratis es solo para cuentas nuevas y se usa una sola vez.');
+    }
+    throw new Error(error.message || 'No se pudo activar la prueba.');
+  }
+  return data;
+}
+
+/* ---- Pago con Yape -------------------------------------------------------- */
+
+let mercadoPagoPromise = null;
+
+/** Carga MercadoPago.js una sola vez y lo configura con la Public Key. */
+export function loadMercadoPago() {
+  if (!mercadoPagoPromise) {
+    mercadoPagoPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = CONFIG.mercadoPagoJsUrl;
+      script.async = true;
+      script.onload = () =>
+        window.MercadoPago
+          ? resolve(new window.MercadoPago(CONFIG.mercadoPagoPublicKey, { locale: 'es-PE' }))
+          : reject(new Error('No se pudo cargar Mercado Pago.'));
+      script.onerror = () => reject(new Error('No se pudo cargar Mercado Pago. Revisa tu conexión.'));
+      document.head.append(script);
+    }).catch((err) => {
+      mercadoPagoPromise = null; // permite reintentar
+      throw err;
+    });
+  }
+  return mercadoPagoPromise;
+}
+
+/**
+ * Convierte el celular y el código de aprobación de Yape en un token de un solo uso.
+ * Estos datos van directo a Mercado Pago: CuálToca no los recibe ni los guarda.
+ */
+export async function createYapeToken({ phoneNumber, otp }) {
+  const mp = await loadMercadoPago();
+  let result;
+  try {
+    result = await mp.yape({ phoneNumber, otp }).create();
+  } catch {
+    throw new Error('Revisa tu número de celular y el código de aprobación. Si el código venció, genera uno nuevo en Yape.');
+  }
+  const token = typeof result === 'string' ? result : result?.id;
+  if (!token) throw new Error('Yape no respondió. Intenta de nuevo con un código nuevo.');
+  return token;
+}
+
+/** Cobra el pase con el token de Yape. Devuelve { status: 'approved', accessUntil }. */
+export async function payWithYape(client, interval, token) {
+  const { data, error } = await client.functions.invoke('pay-with-yape', { body: { interval, token } });
+  if (error) throw await functionError(error);
+  return data;
+}

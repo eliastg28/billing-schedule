@@ -28,8 +28,8 @@ import {
   alertMessage, projectPayments, purchaseSchedule, formatMoney, toCents, MAX_INSTALLMENTS,
 } from './engine.js';
 import {
-  PLANS, PRICING, PLAN_FEATURES, FREE_CARD_LIMIT, isSubscriptionActive, partitionCards,
-  canAddCard, yearlySavingsPercent,
+  PLANS, PRICING, PLAN_FEATURES, FREE_CARD_LIMIT, TRIAL_LABEL, PASS_LABELS, isSubscriptionActive,
+  premiumStatus, canStartTrial, partitionCards, canAddCard, yearlySavingsPercent,
 } from './plan.js';
 import {
   LocalStore, RemoteStore, StoreError, storageGet, storageSet, normalizeCards,
@@ -37,7 +37,9 @@ import {
 } from './store.js';
 import * as backend from './backend.js';
 import * as notify from './notify.js';
-import { guardInput, sanitizeInteger, sanitizeDecimal } from './inputs.js';
+import {
+  guardInput, sanitizeInteger, sanitizeDecimal, sanitizeDigits, sanitizePhone, isValidPhone,
+} from './inputs.js';
 
 // #region 1. CONSTANTES ======================================================
 
@@ -173,6 +175,8 @@ const state = {
   store: localStore,
   loginSentTo: null, // correo al que se envió el enlace de acceso
   authProviders: {}, // proveedores activos en Supabase, ej. { email: true, google: false }
+  payMethod: 'yape', // forma de pago elegida en Planes: 'yape' (pase) | 'card' (suscripción)
+  yapeInterval: 'monthly', // pase que se está pagando en el diálogo de Yape
 
   // Interfaz
   today: startOfDay(new Date()),
@@ -190,6 +194,15 @@ const isDevMode = () => state.backend === 'none' && CONFIG.devTools;
 
 /** ¿Se puede iniciar un pago? (en modo de prueba se simula; en producción depende de CONFIG.paymentsEnabled) */
 const paymentsAvailable = () => isDevMode() || CONFIG.paymentsEnabled;
+
+/** ¿Se puede pagar con Yape? Además de los cobros, requiere la Public Key de Mercado Pago. */
+const yapeAvailable = () => isDevMode() || (CONFIG.paymentsEnabled && Boolean(CONFIG.mercadoPagoPublicKey));
+
+/** ¿Ofrecer la prueba gratis? También a quien aún no tiene cuenta (se le pide crearla). */
+const trialOffered = () =>
+  paymentsAvailable() &&
+  !isPremium() &&
+  (isDevMode() || (state.backend === 'supabase' && (!state.user || canStartTrial(state.subscription))));
 
 /** 'free' | 'premium' */
 function currentPlanId() {
@@ -340,16 +353,37 @@ function openUpgrade(reason = 'generic') {
   $('#upgrade-title').textContent = copy.title;
   $('#upgrade-text').textContent = copy.text;
   $('#upgrade-benefits').innerHTML = PREMIUM_BENEFITS.map((b) => `<li>${icon('check')}<span>${b}</span></li>`).join('');
-  $('#upgrade-price').textContent = paymentsAvailable()
-    ? `${priceText('monthly')} al mes o ${priceText('yearly')} al año. Cancela cuando quieras.`
-    : `Muy pronto: ${priceText('monthly')} al mes o ${priceText('yearly')} al año.`;
+  const trial = trialOffered();
+  const prices = `${priceText('monthly')} al mes o ${priceText('yearly')} al año`;
+  let priceLine = `Muy pronto: ${prices}.`;
+  if (trial) priceLine = `Pruébalo ${TRIAL_LABEL} gratis, sin tarjeta. Después, desde ${priceText('monthly')} al mes.`;
+  else if (paymentsAvailable()) priceLine = `${prices}${yapeAvailable() ? ', con Yape o con tarjeta.' : '. Cancela cuando quieras.'}`;
+  $('#upgrade-price').textContent = priceLine;
+  const go = $('#upgrade-go');
+  go.value = trial ? 'trial' : 'plans';
+  go.textContent = trial ? `Probar ${TRIAL_LABEL} gratis` : 'Ver planes';
   dialog.returnValue = '';
   dialog.showModal();
   dialog.addEventListener('close', () => {
-    if (dialog.returnValue !== 'plans') return;
-    location.hash = '#cuenta';
-    setTimeout(() => $('#plans-panel').scrollIntoView({ block: 'start', behavior: prefersReducedMotion() ? 'auto' : 'smooth' }), 60);
+    if (dialog.returnValue === 'trial') startTrial();
+    else if (dialog.returnValue === 'plans') goToPlans();
   }, { once: true });
+}
+
+/** Lleva a la sección de planes en Cuenta. */
+function goToPlans() {
+  location.hash = '#cuenta';
+  setTimeout(() => $('#plans-panel').scrollIntoView({ block: 'start', behavior: prefersReducedMotion() ? 'auto' : 'smooth' }), 60);
+}
+
+/** Días de calendario que faltan hasta una fecha (0 = hoy). */
+const daysUntil = (iso) => diffDays(state.today, startOfDay(new Date(iso)));
+
+function daysLeftText(iso) {
+  const days = daysUntil(iso);
+  if (days <= 0) return 'termina hoy';
+  if (days === 1) return 'termina mañana';
+  return `quedan ${days} días`;
 }
 
 /* ---- Piezas reutilizables ------------------------------------------------ */
@@ -545,7 +579,7 @@ async function runAlertNotifications() {
   await notify.deliverAlertNotifications(alerts, alertMessage, state.today);
 }
 
-/** Tras volver de Mercado Pago, espera a que el webhook active Premium. */
+/** Tras volver de Mercado Pago, espera a que el webhook active la suscripción. */
 async function handleCheckoutReturn() {
   const url = new URL(location.href);
   if (!url.searchParams.has('checkout') && !url.searchParams.has('preapproval_id')) return;
@@ -555,17 +589,18 @@ async function handleCheckoutReturn() {
   applyRoute();
   if (!state.user) return;
 
-  toast('Estamos confirmando tu pago…');
+  // Se espera a la suscripción, no solo a Premium: quien está en su prueba ya es Premium.
+  toast('Estamos confirmando tu suscripción…');
   for (let attempt = 0; attempt < 10; attempt++) {
     await sleep(3000);
     await refreshSubscription();
-    if (isPremium()) {
-      toast('¡Listo! Tu plan Premium está activo.', 'success');
+    if (state.subscription?.status === 'active') {
+      toast('¡Listo! Tu suscripción Premium está activa.', 'success');
       runAlertNotifications();
       return;
     }
   }
-  toast('Tu pago sigue en proceso. Vuelve a abrir esta pantalla en unos minutos.');
+  toast('Tu suscripción sigue en proceso. Vuelve a abrir esta pantalla en unos minutos.');
 }
 
 // #endregion 4.
@@ -813,21 +848,51 @@ function renderAlertsPanel(cards) {
     </section>`;
 }
 
-/** Invitación a Premium en la portada (solo plan Gratis). */
+/**
+ * Premium en la portada: invitación (plan Gratis, con la prueba gratis si
+ * corresponde) o aviso de que la prueba o el pase terminan pronto.
+ */
 function renderPremiumPromo() {
   const box = $('#premium-promo');
-  if (isPremium() || state.loading) {
-    box.hidden = true;
-    box.innerHTML = '';
-    return;
+  const html = state.loading ? '' : isPremium() ? endingPromoHTML() : offerPromoHTML();
+  box.hidden = !html;
+  box.innerHTML = html;
+}
+
+function offerPromoHTML() {
+  const benefits = `<ul class="benefits">${PREMIUM_BENEFITS.map((b) => `<li>${icon('check')}<span>${b}</span></li>`).join('')}</ul>`;
+  if (trialOffered()) {
+    return `
+      <section class="promo" aria-labelledby="t-promo">
+        <p class="eyebrow">${premiumPill()}</p>
+        <h2 id="t-promo">Prueba Premium ${TRIAL_LABEL} gratis</h2>
+        <p class="promo-sub">Sin tarjeta y sin compromiso. Al terminar vuelves al plan Gratis, a menos que decidas seguir.</p>
+        ${benefits}
+        <button type="button" class="btn btn--premium btn--block" data-action="start-trial">🎁 Empezar mi mes gratis</button>
+      </section>`;
   }
-  box.hidden = false;
-  box.innerHTML = `
+  return `
     <section class="promo" aria-labelledby="t-promo">
       <p class="eyebrow">${premiumPill()}</p>
       <h2 id="t-promo">Que no se te pase ningún pago</h2>
-      <ul class="benefits">${PREMIUM_BENEFITS.map((b) => `<li>${icon('check')}<span>${b}</span></li>`).join('')}</ul>
+      ${benefits}
       <button type="button" class="btn btn--premium btn--block" data-action="upgrade" data-reason="alerts">Ver Premium · ${priceText('monthly')} al mes</button>
+    </section>`;
+}
+
+/** Aviso cuando la prueba gratis o el Premium sin renovación terminan en 5 días o menos. */
+function endingPromoHTML() {
+  const status = premiumStatus(state.subscription);
+  if (!['trial', 'pass', 'cancelled'].includes(status.kind) || daysUntil(status.until) > 5) return '';
+  const what = status.kind === 'trial' ? 'Tu prueba gratis' : 'Tu Premium';
+  const days = daysUntil(status.until);
+  const when = days <= 0 ? 'termina hoy' : days === 1 ? 'termina mañana' : `termina en ${days} días`;
+  const methods = yapeAvailable() ? ', con Yape o con tarjeta' : '';
+  return `
+    <section class="promo promo--ending" aria-labelledby="t-promo">
+      <h2 id="t-promo">⏳ ${what} ${when}</h2>
+      <p class="promo-sub">Sigue con tarjetas ilimitadas y avisos de pago desde ${priceText('monthly')} al mes${methods}. Si no, vuelves al plan Gratis: tus tarjetas extra se guardan, pero quedan bloqueadas.</p>
+      <button type="button" class="btn btn--premium btn--block" data-action="see-plans">Seguir con Premium</button>
     </section>`;
 }
 
@@ -1540,45 +1605,16 @@ function devToolsHTML() {
 function plansPanelHTML() {
   const premium = isPremium();
   const sub = state.subscription;
+  const status = premiumStatus(sub);
   const cell = (value) => {
     if (value === true) return `<span class="yes">${icon('check')}<span class="sr-only">Incluido</span></span>`;
     if (value === false) return '<span class="no" aria-label="No incluido">—</span>';
     return esc(value);
   };
 
-  let status = 'Estás en el plan Gratis.';
-  if (premium && sub?.status === 'cancelled' && sub.currentPeriodEnd) {
-    status = `Tu Premium sigue activo hasta el ${fmtLong(new Date(sub.currentPeriodEnd), state.today)}. No se renovará.`;
-  } else if (premium) {
-    status = isDevMode() ? 'Premium de prueba activo. No se hizo ningún cobro.' : 'Tu plan Premium está activo. ¡Gracias por apoyar la app!';
-  } else if (sub?.status === 'pending') {
-    status = 'Tu pago está en proceso. Puede tardar unos minutos en confirmarse.';
-  } else if (sub?.status === 'paused') {
-    status = 'Tu suscripción está pausada. Revisa tu medio de pago en Mercado Pago.';
-  }
-
-  let actions = '';
-  const showOffer = !premium || (sub?.status === 'cancelled');
-  if (showOffer && !(premium && isDevMode())) {
-    const payable = paymentsAvailable();
-    let note = 'Inicia sesión para suscribirte. Pago seguro con Mercado Pago.';
-    if (isDevMode()) note = 'Modo de prueba: al elegir un plan se activa Premium sin cobrar.';
-    else if (!payable) note = '<strong>Muy pronto</strong> podrás suscribirte a Premium con Mercado Pago. Mientras tanto, todo el plan Gratis está disponible.';
-    else if (state.user) note = 'Pago seguro con Mercado Pago. Cancela cuando quieras.';
-    const disabled = payable ? '' : 'disabled';
-    actions = `
-      <div class="price-options">
-        <button type="button" class="price-option" data-action="checkout" data-interval="monthly" ${disabled}>
-          <span class="price">${priceText('monthly')}</span><span class="price-period">al mes</span>
-        </button>
-        <button type="button" class="price-option price-option--best" data-action="checkout" data-interval="yearly" ${disabled}>
-          <span class="price-save">Ahorra ${yearlySavingsPercent()}%</span>
-          <span class="price">${priceText('yearly')}</span><span class="price-period">al año</span>
-        </button>
-      </div>
-      <p class="field-hint">${note}</p>`;
-  }
-  if (premium && state.user && sub?.status === 'active') {
+  let actions = trialOffered() ? trialOfferHTML() : '';
+  if (status.kind !== 'subscription' && !(premium && isDevMode())) actions += payOptionsHTML(premium, status);
+  if (status.kind === 'subscription' && state.user) {
     actions += `<button type="button" class="btn btn--ghost btn--danger-text" data-action="cancel-subscription">Cancelar suscripción</button>`;
   }
   if (sub?.status === 'pending') {
@@ -1588,7 +1624,7 @@ function plansPanelHTML() {
   return `
     <header class="panel-head">
       <h2>${icon('star')}Plan ${premium ? premiumPill() : '<span class="plan-pill">Gratis</span>'}</h2>
-      <p class="panel-sub">${status}</p>
+      <p class="panel-sub">${planStatusText(premium, sub, status)}</p>
     </header>
     <table class="plans-table">
       <thead><tr><th scope="col"><span class="sr-only">Función</span></th><th scope="col">Gratis</th><th scope="col">Premium</th></tr></thead>
@@ -1597,6 +1633,88 @@ function plansPanelHTML() {
       </tbody>
     </table>
     ${actions}`;
+}
+
+/** Una línea que explica el plan actual: de dónde viene Premium y hasta cuándo. */
+function planStatusText(premium, sub, status) {
+  if (isDevMode()) return premium ? 'Premium de prueba activo. No se hizo ningún cobro.' : 'Estás en el plan Gratis.';
+  const date = (iso) => fmtLong(new Date(iso), state.today);
+  switch (status.kind) {
+    case 'subscription': {
+      const plan = sub.interval === 'yearly' ? 'anual' : 'mensual';
+      return status.nextCharge
+        ? `Tu suscripción ${plan} con tarjeta está activa. Próximo cobro: ${date(status.nextCharge)}.`
+        : `Tu suscripción ${plan} con tarjeta está activa. ¡Gracias por apoyar la app!`;
+    }
+    case 'trial':
+      return `Estás en tu prueba gratis: termina el ${date(status.until)} (${daysLeftText(status.until)}). No se te cobrará nada.`;
+    case 'pass':
+      return `Tienes Premium hasta el ${date(status.until)} (${daysLeftText(status.until)}). No se renueva solo.`;
+    case 'cancelled':
+      return `Tu Premium sigue activo hasta el ${date(status.until)}. No se renovará.`;
+    case 'pending':
+      return 'Tu pago está en proceso. Puede tardar unos minutos en confirmarse.';
+    case 'paused':
+      return 'Tu suscripción está pausada. Revisa tu medio de pago en Mercado Pago.';
+    default:
+      return sub?.trialEndsAt ? 'Tu prueba gratis terminó. Estás en el plan Gratis.' : 'Estás en el plan Gratis.';
+  }
+}
+
+function trialOfferHTML() {
+  return `
+    <div class="trial-offer">
+      <span class="trial-offer-icon" aria-hidden="true">🎁</span>
+      <div class="trial-offer-text">
+        <p class="trial-offer-title">Prueba Premium ${TRIAL_LABEL} gratis</p>
+        <p>Sin tarjeta y sin compromiso. Al terminar vuelves al plan Gratis, a menos que decidas pagar.</p>
+      </div>
+      <button type="button" class="btn btn--premium" data-action="start-trial">Empezar mi mes gratis</button>
+    </div>`;
+}
+
+/** Formas de pago: pase con Yape (pago único) o suscripción con tarjeta (se renueva sola). */
+function payOptionsHTML(premium, status) {
+  const payable = paymentsAvailable();
+  const yape = yapeAvailable();
+  const method = yape ? state.payMethod : 'card';
+  const until = status.until; // Premium vigente que no se renueva (prueba, pase o cancelada)
+  const date = (iso) => fmtLong(new Date(iso), state.today);
+
+  let note = 'Pago seguro con Mercado Pago.';
+  if (isDevMode()) note = 'Modo de prueba: al elegir un plan se activa Premium sin cobrar.';
+  else if (!payable) note = '<strong>Muy pronto</strong> podrás pagar Premium. Mientras tanto, todo el plan Gratis está disponible.';
+  else if (!state.user) note = 'Inicia sesión para pagar. Pago seguro con Mercado Pago.';
+  else if (until && method === 'yape') note = `Los días se suman: tu pase empieza el ${date(until)}, cuando termine tu Premium actual.`;
+  else if (until) note = `No pierdes tus días: el primer cobro será el ${date(until)}, cuando termine tu Premium actual.`;
+
+  const methodText = method === 'yape'
+    ? 'Sin tarjeta: pagas con tu celular y el código de aprobación de Yape. Es un pago único y no se renueva solo.'
+    : 'Se renueva sola y la cancelas cuando quieras. Tu tarjeta se ingresa en la página segura de Mercado Pago, nunca en CuálToca. También puedes pagar con tu saldo de Mercado Pago.';
+  const periods = method === 'yape'
+    ? { monthly: `${PASS_LABELS.monthly} · pago único`, yearly: `${PASS_LABELS.yearly} · pago único` }
+    : { monthly: 'al mes', yearly: 'al año' };
+  const action = method === 'yape' ? 'pay-yape' : 'checkout';
+  const disabled = payable ? '' : 'disabled';
+  const methodButton = (id, label) =>
+    `<button type="button" class="${method === id ? 'is-active' : ''}" data-action="pay-method" data-method="${id}" aria-pressed="${method === id}">${label}</button>`;
+
+  return `
+    <section class="pay-block" aria-labelledby="t-pay">
+      <h3 class="pay-title" id="t-pay">${premium ? 'Sigue con Premium' : 'Hazte Premium'}</h3>
+      ${yape ? `<div class="segmented pay-methods" role="group" aria-label="Forma de pago">${methodButton('yape', '📱 Yape')}${methodButton('card', '💳 Tarjeta')}</div>` : ''}
+      <p class="pay-method-text">${methodText}</p>
+      <div class="price-options">
+        <button type="button" class="price-option" data-action="${action}" data-interval="monthly" ${disabled}>
+          <span class="price">${priceText('monthly')}</span><span class="price-period">${periods.monthly}</span>
+        </button>
+        <button type="button" class="price-option price-option--best" data-action="${action}" data-interval="yearly" ${disabled}>
+          <span class="price-save">Ahorra ${yearlySavingsPercent()}%</span>
+          <span class="price">${priceText('yearly')}</span><span class="price-period">${periods.yearly}</span>
+        </button>
+      </div>
+      <p class="field-hint">${note}</p>
+    </section>`;
 }
 
 function alertsSettingsHTML() {
@@ -2049,26 +2167,133 @@ async function checkout(interval, button) {
     toast('Premium de prueba activado. No se hizo ningún cobro.', 'success');
     return;
   }
-  if (!CONFIG.paymentsEnabled) {
-    toast('Premium estará disponible muy pronto.');
-    return;
-  }
-  if (!state.client) {
-    toast('Los pagos se activan al conectar el servidor.', 'error');
-    return;
-  }
-  if (!state.user) {
-    toast('Inicia sesión para suscribirte.');
-    $('#account-panel').scrollIntoView({ block: 'start' });
-    focusSelector('#login-email');
-    return;
-  }
+  if (!readyToPay('Inicia sesión para suscribirte.')) return;
   setBusy(button, true);
   try {
     location.href = await backend.startCheckout(state.client, interval);
   } catch (err) {
     toast(`No se pudo iniciar el pago: ${err.message}`, 'error');
     setBusy(button, false);
+  }
+}
+
+/**
+ * Comprueba que se pueda pagar o empezar la prueba: cobros activos, servidor
+ * conectado y sesión iniciada (si no, lleva al inicio de sesión).
+ */
+function readyToPay(loginMessage) {
+  if (!paymentsAvailable()) {
+    toast('Premium estará disponible muy pronto.');
+    return false;
+  }
+  if (!state.client) {
+    toast('Los pagos se activan al conectar el servidor.', 'error');
+    return false;
+  }
+  if (!state.user) {
+    toast(loginMessage);
+    location.hash = '#cuenta';
+    setTimeout(() => {
+      $('#account-panel').scrollIntoView({ block: 'start' });
+      focusSelector('#login-email');
+    }, 60);
+    return false;
+  }
+  return true;
+}
+
+/** Activa la prueba gratis de 1 mes (una vez por persona, sin medio de pago). */
+async function startTrial(button = null) {
+  if (isDevMode()) {
+    storageSet(DEV_PLAN_KEY, 'premium');
+    onPlanChanged();
+    toast('Prueba gratis simulada: Premium activo. No se hizo ningún cobro.', 'success');
+    return;
+  }
+  if (!readyToPay(`Crea tu cuenta gratis o inicia sesión para empezar tu ${TRIAL_LABEL} de prueba.`)) return;
+  setBusy(button, true);
+  try {
+    const endsAt = await backend.startTrial(state.client);
+    state.subscription = await state.store.getSubscription();
+    onPlanChanged();
+    toast(`¡Listo! Tienes Premium gratis hasta el ${fmtLong(new Date(endsAt), state.today)}. No se te cobrará nada.`, 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+    await refreshSubscription();
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+/* ---- Pago con Yape ------------------------------------------------------- */
+
+const YAPE_FIELDS = {
+  phone: { form: '#yape-form', input: '#y-phone' },
+  otp: { form: '#yape-form', input: '#y-otp' },
+};
+
+function showYapeError(message) {
+  const box = $('#yape-error');
+  box.textContent = message || '';
+  box.hidden = !message;
+}
+
+function openYapeDialog(interval) {
+  if (!isDevMode() && !readyToPay('Inicia sesión para pagar con Yape.')) return;
+  state.yapeInterval = interval;
+  const until = premiumStatus(state.subscription).until;
+  $('#yape-plan').textContent = `Premium · ${PASS_LABELS[interval]}`;
+  $('#yape-note').textContent = until
+    ? `Pago único. Se suma a tu Premium actual: empieza el ${fmtLong(new Date(until), state.today)}.`
+    : 'Pago único. No se renueva solo.';
+  $('#yape-amount').textContent = priceText(interval);
+  $('#yape-submit').textContent = `Pagar ${priceText(interval)}`;
+  $('#yape-form').reset();
+  showFieldErrors(YAPE_FIELDS, {});
+  showYapeError('');
+  $('#yape-dialog').showModal();
+  focusSelector('#y-phone');
+  if (!isDevMode()) backend.loadMercadoPago().catch(() => {}); // se precarga mientras la persona abre Yape
+}
+
+async function onYapeSubmit(event) {
+  event.preventDefault();
+  const phoneNumber = $('#y-phone').value;
+  const otp = $('#y-otp').value;
+  const errors = {};
+  if (!isValidPhone(phoneNumber)) errors.phone = 'Escribe tu celular de 9 dígitos (empieza con 9).';
+  if (!/^\d{6}$/.test(otp)) errors.otp = 'El código tiene 6 dígitos.';
+  showFieldErrors(YAPE_FIELDS, errors);
+  if (errors.phone || errors.otp) {
+    focusSelector(errors.phone ? '#y-phone' : '#y-otp');
+    return;
+  }
+
+  const submit = $('#yape-submit');
+  showYapeError('');
+  setBusy(submit, true);
+  try {
+    if (isDevMode()) {
+      await sleep(600);
+      storageSet(DEV_PLAN_KEY, 'premium');
+      $('#yape-dialog').close();
+      onPlanChanged();
+      toast('Pago con Yape simulado. No se hizo ningún cobro.', 'success');
+      return;
+    }
+    const token = await backend.createYapeToken({ phoneNumber, otp });
+    const { accessUntil } = await backend.payWithYape(state.client, state.yapeInterval, token);
+    $('#yape-dialog').close();
+    state.subscription = await state.store.getSubscription();
+    onPlanChanged();
+    toast(`¡Pago aprobado! Tienes Premium hasta el ${fmtLong(new Date(accessUntil), state.today)}.`, 'success');
+  } catch (err) {
+    // El código de aprobación es de un solo uso: para reintentar hace falta uno nuevo.
+    showYapeError(err.message || 'No se pudo completar el pago.');
+    $('#y-otp').value = '';
+    focusSelector('#y-otp');
+  } finally {
+    setBusy(submit, false);
   }
 }
 
@@ -2251,6 +2476,20 @@ function onActionClick(event) {
     case 'checkout':
       checkout(el.dataset.interval === 'yearly' ? 'yearly' : 'monthly', el);
       break;
+    case 'pay-yape':
+      openYapeDialog(el.dataset.interval === 'yearly' ? 'yearly' : 'monthly');
+      break;
+    case 'pay-method':
+      state.payMethod = el.dataset.method === 'card' ? 'card' : 'yape';
+      renderAccount();
+      focusSelector(`[data-action="pay-method"][data-method="${state.payMethod}"]`);
+      break;
+    case 'start-trial':
+      startTrial(el);
+      break;
+    case 'see-plans':
+      goToPlans();
+      break;
     case 'cancel-subscription':
       cancelPlan(el);
       break;
@@ -2367,6 +2606,17 @@ function bindEvents() {
   guardInput($('#f-payment'), dayOfMonth);
   guardInput($('#p-installments'), (text) => sanitizeInteger(text, { max: MAX_INSTALLMENTS, maxLength: 2 }));
   guardInput($('#p-amount'), (text) => sanitizeDecimal(text, { max: MAX_AMOUNT, decimals: 2 }));
+  guardInput($('#y-phone'), sanitizePhone);
+  guardInput($('#y-otp'), (text) => sanitizeDigits(text, 6));
+
+  // Pago con Yape
+  const yapeForm = $('#yape-form');
+  yapeForm.addEventListener('submit', onYapeSubmit);
+  yapeForm.addEventListener('input', (e) => {
+    const field = Object.keys(YAPE_FIELDS).find((key) => YAPE_FIELDS[key].input === `#${e.target.id}`);
+    if (field) showFieldErrors({ [field]: YAPE_FIELDS[field] }, {});
+    showYapeError('');
+  });
 
   // Formulario de tarjeta
   const cardForm = $('#card-form');

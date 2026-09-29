@@ -27,11 +27,21 @@ export const CONFIG = Object.freeze({
   /** Muestra el simulador de plan en modo local. No tiene efecto con Supabase conectado. */
   devTools: true,
   /**
-   * Cobros con Mercado Pago. Mientras sea false, los planes se muestran como
-   * "Muy pronto" y nadie puede iniciar un pago. Actívalo cuando las Edge
-   * Functions de cobro estén desplegadas y probadas (ver README).
+   * Cobros con Mercado Pago y prueba gratis. Mientras sea false, los planes se
+   * muestran como "Muy pronto" y nadie puede pagar ni empezar la prueba.
+   * Actívalo cuando las Edge Functions de cobro estén desplegadas y probadas
+   * (ver README).
    */
   paymentsEnabled: false,
+  /**
+   * Public Key de Mercado Pago (Tus integraciones > Credenciales). Es pública
+   * por diseño y solo sirve para crear el token del pago con Yape. Vacía = el
+   * pago con Yape no se muestra y solo queda la suscripción con tarjeta.
+   * NUNCA pongas aquí el Access Token.
+   */
+  mercadoPagoPublicKey: '',
+  /** SDK oficial de Mercado Pago (solo se descarga al pagar con Yape). */
+  mercadoPagoJsUrl: 'https://sdk.mercadopago.com/js/v2',
   /** Cliente oficial de Supabase (solo se descarga si hay servidor configurado). */
   supabaseJsUrl: 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm',
 });

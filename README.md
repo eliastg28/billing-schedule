@@ -17,6 +17,17 @@ Esta rama (`feature/premium`) convierte la app en un servicio con cuentas y dos 
 
 Los límites se aplican en la interfaz **y en la base de datos**: nadie puede saltarlos editando el navegador.
 
+### Cómo se obtiene Premium
+
+| Forma | Cómo paga | Renovación |
+|---|---|---|
+| **Prueba gratis** | Nada: sin tarjeta ni Yape | 1 mes, una sola vez por persona |
+| **Pase con Yape** | Celular + código de aprobación de Yape | No se renueva (1 o 12 meses) |
+| **Suscripción con tarjeta** | Tarjeta o saldo, en la página de Mercado Pago | Automática; se cancela cuando quieras |
+
+- La prueba es solo para cuentas que nunca tuvieron Premium. Se guarda un hash del correo (Gmail sin puntos ni `+alias`) para que no se repita creando cuentas nuevas.
+- Los días se suman: un pase empieza cuando termina la prueba u otro pase, y una suscripción creada durante la prueba hace su primer cobro cuando la prueba termina.
+
 ---
 
 ## Probar en tu computadora
@@ -64,8 +75,9 @@ supabase/
   functions/
     _shared/engine.js   Copia exacta de js/engine.js (lo verifica un test)
     send-reminders/     Avisos por correo (solo Premium)
-    create-checkout/    Crea la suscripción en Mercado Pago
+    create-checkout/    Crea la suscripción con tarjeta en Mercado Pago
     cancel-subscription/Cancela la suscripción
+    pay-with-yape/      Cobra un pase con Yape (pago único)
     mercadopago-webhook/Activa o desactiva Premium según Mercado Pago
 tests/                  Pruebas (npm test)
 scripts/serve.mjs       Servidor local sin dependencias
@@ -102,7 +114,9 @@ appUrl: 'https://TU-DOMINIO/',
 
 La clave pública puede estar en el código: la seguridad la dan las políticas RLS. **Nunca** pongas la clave `service_role` en el navegador.
 
-Mientras `paymentsEnabled` sea `false`, los planes se muestran como "Muy pronto" y nadie puede iniciar un pago. Cámbialo a `true` cuando termines el paso 5 y pruebes un cobro.
+Mientras `paymentsEnabled` sea `false`, los planes se muestran como "Muy pronto" y nadie puede pagar ni empezar la prueba gratis. Cámbialo a `true` cuando termines el paso 5 y pruebes un cobro.
+
+Para el pago con Yape, pon también la **Public Key** de Mercado Pago en `mercadoPagoPublicKey` (es pública por diseño). Si la dejas vacía, solo se ofrece la suscripción con tarjeta.
 
 ### 3. Correos (Resend)
 
@@ -111,8 +125,9 @@ Mientras `paymentsEnabled` sea `false`, los planes se muestran como "Muy pronto"
 
 ### 4. Cobros (Mercado Pago)
 
-1. En **Tus integraciones**, crea una aplicación de tipo suscripciones y copia el **Access Token**. Empieza con las credenciales de **prueba** y usuarios de prueba.
-2. En **Webhooks**, configura la URL `https://TU-PROYECTO.supabase.co/functions/v1/mercadopago-webhook`, marca el evento **Planes y suscripciones** y copia la **clave secreta**.
+1. En **Tus integraciones**, crea una aplicación (pagos online, con suscripciones y Checkout API) y copia el **Access Token** y la **Public Key**. Empieza con las credenciales de **prueba** y usuarios de prueba.
+2. En **Webhooks**, configura la URL `https://TU-PROYECTO.supabase.co/functions/v1/mercadopago-webhook`, marca los eventos **Planes y suscripciones** y **Pagos**, y copia la **clave secreta**.
+3. Para probar Yape con credenciales de prueba, usa el celular `111111111` y el código `123456` (pago aprobado). Otros números simulan rechazos: `111111113` (saldo insuficiente), `111111117` (código incorrecto).
 
 ### 5. Secretos y funciones
 
@@ -130,12 +145,13 @@ supabase secrets set \
 
 supabase functions deploy create-checkout --no-verify-jwt
 supabase functions deploy cancel-subscription --no-verify-jwt
+supabase functions deploy pay-with-yape --no-verify-jwt
 supabase functions deploy send-reminders --no-verify-jwt
 supabase functions deploy mercadopago-webhook --no-verify-jwt
 ```
 
 Todas se despliegan sin la verificación JWT automática, que no es compatible con las claves nuevas de Supabase. Cada función se protege sola:
-- `create-checkout` y `cancel-subscription` validan la sesión del usuario con Supabase Auth.
+- `create-checkout`, `cancel-subscription` y `pay-with-yape` validan la sesión del usuario con Supabase Auth.
 - `send-reminders` exige el secreto `REMINDERS_CRON_SECRET`.
 - `mercadopago-webhook` valida la firma de Mercado Pago.
 
@@ -165,3 +181,4 @@ GitHub Pages sirve la rama `main`. Al unir esta rama con `main`, la versión pub
 - **iPhone:** las notificaciones requieren instalar la app en la pantalla de inicio (iOS 16.4 o superior).
 - **Fechas:** algunos bancos mueven el cierre o el pago en ciertos meses. La app es una guía: el estado de cuenta manda.
 - **Mercado Pago:** la integración sigue la documentación oficial, pero debe probarse con credenciales de prueba antes de lanzar.
+- **Yape:** el monto máximo por pago depende de la configuración de cada Yape (S/ 500 a S/ 2000), así que los pases de S/ 7.90 y S/ 59 no tienen problema.

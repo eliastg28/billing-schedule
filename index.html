@@ -467,7 +467,56 @@
       <p class="upgrade-price" id="upgrade-price"></p>
       <footer class="dialog-foot">
         <button type="submit" class="btn btn--ghost" value="cancel">Ahora no</button>
-        <button type="submit" class="btn btn--premium" value="plans">Ver planes</button>
+        <button type="submit" class="btn btn--premium" value="plans" id="upgrade-go">Ver planes</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- =====================================================================
+       Diálogo: pagar un pase Premium con Yape (sin tarjeta)
+       ===================================================================== -->
+  <dialog id="yape-dialog" class="dialog dialog--sm" aria-labelledby="yape-title">
+    <form id="yape-form" class="dialog-body" novalidate>
+      <header class="dialog-head">
+        <h2 id="yape-title">Pagar con Yape</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Cerrar">
+          <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+        </button>
+      </header>
+
+      <div class="pay-summary">
+        <span class="pay-summary-icon" aria-hidden="true">📱</span>
+        <div>
+          <p class="pay-summary-title" id="yape-plan">Premium · 1 mes</p>
+          <p class="pay-summary-note" id="yape-note">Pago único. No se renueva solo.</p>
+        </div>
+        <strong class="pay-summary-amount" id="yape-amount"></strong>
+      </div>
+
+      <ol class="pay-steps">
+        <li>Abre tu app de <strong>Yape</strong> y entra a <strong>Código de aprobación</strong> (está en el menú).</li>
+        <li>Escribe aquí tu celular y ese código de 6 dígitos.</li>
+      </ol>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="y-phone">Celular de Yape</label>
+          <input id="y-phone" class="input" type="text" inputmode="numeric" maxlength="16" autocomplete="tel-national" placeholder="987654321" required />
+          <p class="field-error" data-error-for="phone"></p>
+        </div>
+        <div class="field">
+          <label for="y-otp">Código de aprobación</label>
+          <input id="y-otp" class="input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="123456" required />
+          <p class="field-error" data-error-for="otp"></p>
+        </div>
+      </div>
+
+      <p class="pay-error" id="yape-error" role="alert" hidden></p>
+      <p class="field-hint">🔒 Tu celular y el código van directo a Mercado Pago, que procesa el pago. CuálToca no los guarda.</p>
+
+      <footer class="dialog-foot">
+        <button type="button" class="btn btn--ghost" data-close>Cancelar</button>
+        <button type="submit" class="btn btn--primary" id="yape-submit">Pagar</button>
       </footer>
     </form>
   </dialog>

@@ -374,9 +374,19 @@ export class RemoteStore {
 
   async getSubscription() {
     const row = await this.run(
-      this.client.from('subscriptions').select('status,plan_interval,current_period_end,provider').maybeSingle(),
+      this.client
+        .from('subscriptions')
+        .select('status,plan_interval,current_period_end,provider,access_until,trial_ends_at')
+        .maybeSingle(),
     );
     if (!row) return null;
-    return { status: row.status, interval: row.plan_interval, currentPeriodEnd: row.current_period_end, provider: row.provider };
+    return {
+      status: row.status,
+      interval: row.plan_interval,
+      currentPeriodEnd: row.current_period_end,
+      provider: row.provider,
+      accessUntil: row.access_until, // prueba gratis o pases con Yape
+      trialEndsAt: row.trial_ends_at,
+    };
   }
 }

@@ -9,7 +9,7 @@
  *  Sube CACHE_VERSION cuando cambie la lista de archivos.
  * =============================================================================
  */
-const CACHE_VERSION = 'cualtoca-v2';
+const CACHE_VERSION = 'cualtoca-v3';
 
 const APP_SHELL = [
   './',

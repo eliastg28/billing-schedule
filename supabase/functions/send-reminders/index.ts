@@ -78,11 +78,14 @@ Deno.serve(async (req) => {
     // 1. Usuarios con Premium vigente (misma regla que public.user_is_premium).
     const { data: subs, error: subsError } = await admin
       .from('subscriptions')
-      .select('user_id,status,current_period_end')
-      .in('status', ['active', 'cancelled']);
+      .select('user_id,status,current_period_end,access_until')
+      .or('status.in.(active,cancelled),access_until.not.is.null');
     if (subsError) throw subsError;
     const premiumIds = (subs ?? [])
-      .filter((s) => s.status === 'active' || (s.current_period_end && new Date(s.current_period_end) > now))
+      .filter((s) =>
+        s.status === 'active' ||
+        (s.status === 'cancelled' && s.current_period_end && new Date(s.current_period_end) > now) ||
+        (s.access_until && new Date(s.access_until) > now))
       .map((s) => s.user_id as string);
     result.premiumUsers = premiumIds.length;
 

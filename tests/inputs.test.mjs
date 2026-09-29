@@ -1,7 +1,7 @@
 // Campos numéricos: solo aceptan valores posibles.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sanitizeInteger, sanitizeDecimal } from '../js/inputs.js';
+import { sanitizeInteger, sanitizeDecimal, sanitizeDigits, sanitizePhone, isValidPhone } from '../js/inputs.js';
 
 const day = (text) => sanitizeInteger(text, { max: 31, maxLength: 2 });
 const installments = (text) => sanitizeInteger(text, { max: 36, maxLength: 2 });
@@ -37,4 +37,20 @@ test('montos: positivos, un punto decimal y máximo 2 decimales', () => {
   assert.equal(amount('1.2.3'), '1.23');
   assert.equal(amount('2e5'), '25');
   assert.equal(amount('2000000'), '200000'); // supera el máximo
+});
+
+test('pago con Yape: celular de 9 dígitos y código de 6', () => {
+  assert.equal(sanitizePhone('987654321'), '987654321');
+  assert.equal(sanitizePhone('987 654 321'), '987654321');
+  assert.equal(sanitizePhone('+51 987 654 321'), '987654321'); // pegado con código de país
+  assert.equal(sanitizePhone('9876543219'), '987654321');
+  assert.equal(sanitizePhone('abc'), '');
+  assert.equal(isValidPhone('987654321'), true);
+  assert.equal(isValidPhone('887654321'), false); // los celulares empiezan con 9
+  assert.equal(isValidPhone('98765432'), false);
+
+  assert.equal(sanitizeDigits('123456', 6), '123456');
+  assert.equal(sanitizeDigits('12-34 56', 6), '123456');
+  assert.equal(sanitizeDigits('1234567', 6), '123456');
+  assert.equal(sanitizeDigits('012345', 6), '012345'); // conserva el cero inicial
 });

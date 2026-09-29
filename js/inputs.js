@@ -6,6 +6,7 @@
  *    - Días del mes: solo dígitos y como máximo 31 (no deja escribir 66 ni -3).
  *    - Montos: solo positivos, con punto decimal y hasta 2 decimales. La coma se
  *      ignora porque en Perú es el separador de miles (1,500.50 = mil quinientos).
+ *    - Pago con Yape: celular de 9 dígitos y código de aprobación de 6.
  *  Las funciones sanitize* son puras (se prueban en tests/inputs.test.mjs).
  *  El mínimo (ej. 0 no es un día válido) se valida al salir del campo y al guardar.
  * =============================================================================
@@ -28,6 +29,18 @@ export function sanitizeDecimal(text, { max, decimals = 2 }) {
   while (clean && Number(clean) > max) clean = clean.slice(0, -1);
   return clean;
 }
+
+/** Solo dígitos, hasta `maxLength` (ej. el código de aprobación de Yape, de 6 dígitos). */
+export const sanitizeDigits = (text, maxLength) => String(text ?? '').replace(/\D/g, '').slice(0, maxLength);
+
+/** Celular del Perú: 9 dígitos. Si se pega con el código de país (+51 987 654 321), se quita. */
+export function sanitizePhone(text) {
+  const digits = String(text ?? '').replace(/\D/g, '');
+  return (digits.length > 9 && digits.startsWith('51') ? digits.slice(2) : digits).slice(0, 9);
+}
+
+/** Los celulares del Perú tienen 9 dígitos y empiezan con 9. */
+export const isValidPhone = (text) => /^9\d{8}$/.test(String(text ?? ''));
 
 /**
  * Protege un <input> con una función de limpieza:

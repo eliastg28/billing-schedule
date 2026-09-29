@@ -14,6 +14,9 @@
 --    - Los límites del plan Gratis se aplican aquí, no solo en la interfaz:
 --        * máximo 2 tarjetas (trigger enforce_card_limit)
 --        * compras registradas solo con Premium (políticas de purchases)
+--    - Premium se obtiene de tres formas: suscripción con tarjeta (se renueva
+--      sola), pase pagado con Yape (1 o 12 meses, no se renueva) o la prueba
+--      gratis de 1 mes (una sola vez por persona, sin medio de pago).
 --    - Nunca se guardan números de tarjeta: solo nombre, días y color.
 --    - Los permisos de cada tabla se declaran al final (sección 8), así que
 --      funciona con la opción "Automatically expose new tables" desactivada,
@@ -39,6 +42,17 @@ create table if not exists public.subscriptions (
 comment on table public.subscriptions is
   'Estado de la suscripción Premium. Solo la escriben las Edge Functions (service_role).';
 
+-- Columnas agregadas después (con "if not exists" para bases ya creadas).
+alter table public.subscriptions add column if not exists access_until  timestamptz;
+alter table public.subscriptions add column if not exists trial_ends_at timestamptz;
+
+comment on column public.subscriptions.current_period_end is
+  'Suscripción con tarjeta: próximo cobro mientras está activa; fin del periodo pagado si se canceló.';
+comment on column public.subscriptions.access_until is
+  'Premium sin renovación automática (prueba gratis o pases con Yape): vigente hasta esta fecha.';
+comment on column public.subscriptions.trial_ends_at is
+  'Fin de la prueba gratis. Si no es null, la persona ya usó su prueba.';
+
 -- ¿El usuario tiene Premium? Misma regla que isSubscriptionActive() en js/plan.js.
 -- Uso interno (triggers y otras funciones): no se expone a los clientes.
 create or replace function public.user_is_premium(uid uuid)
@@ -55,6 +69,7 @@ as $$
       and (
         s.status = 'active'
         or (s.status = 'cancelled' and s.current_period_end > now())
+        or s.access_until > now()
       )
   );
 $$;
@@ -70,6 +85,144 @@ security definer
 set search_path = public
 as $$
   select public.user_is_premium(auth.uid());
+$$;
+
+
+-- 1b. PRUEBA GRATIS Y PASES CON YAPE ------------------------------------------
+
+-- Huella del correo de quienes ya usaron la prueba gratis. Se guarda un hash
+-- (no el correo) y se conserva aunque borren la cuenta, para que la prueba
+-- no se repita creando cuentas nuevas. Solo service_role.
+create table if not exists public.trial_claims (
+  email_hash text primary key,
+  claimed_at timestamptz not null default now()
+);
+
+-- Correo "canónico": en Gmail, juan.perez+x@gmail.com es el mismo buzón que juanperez@gmail.com.
+create or replace function public.normalize_email(email text)
+returns text
+language sql
+immutable
+as $$
+  select case
+    when split_part(e, '@', 2) in ('gmail.com', 'googlemail.com')
+      then replace(split_part(split_part(e, '@', 1), '+', 1), '.', '') || '@gmail.com'
+    else split_part(split_part(e, '@', 1), '+', 1) || '@' || split_part(e, '@', 2)
+  end
+  from (select lower(btrim(email)) as e) as t;
+$$;
+
+-- Activa 1 mes de Premium gratis, sin medio de pago. Solo para cuentas que
+-- nunca tuvieron Premium ni usaron la prueba. La app la llama con rpc('start_trial').
+create or replace function public.start_trial()
+returns timestamptz
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid        uuid := auth.uid();
+  user_email text;
+  sub        public.subscriptions%rowtype;
+  claimed    integer;
+  ends       timestamptz := now() + interval '1 month';
+begin
+  if uid is null then
+    raise exception using errcode = '42501', message = 'NOT_AUTHENTICATED';
+  end if;
+  perform pg_advisory_xact_lock(hashtext('premium:' || uid::text));
+
+  select * into sub from public.subscriptions where user_id = uid;
+  if found and (
+    sub.trial_ends_at is not null
+    or sub.access_until is not null
+    or sub.status in ('active', 'paused', 'cancelled')
+  ) then
+    raise exception using errcode = 'P0001', message = 'TRIAL_NOT_AVAILABLE';
+  end if;
+
+  select email into user_email from auth.users where id = uid;
+  if coalesce(user_email, '') = '' then
+    raise exception using errcode = 'P0001', message = 'TRIAL_NOT_AVAILABLE';
+  end if;
+
+  insert into public.trial_claims (email_hash)
+  values (encode(sha256(convert_to(public.normalize_email(user_email), 'UTF8')), 'hex'))
+  on conflict do nothing;
+  get diagnostics claimed = row_count;
+  if claimed = 0 then
+    raise exception using errcode = 'P0001', message = 'TRIAL_NOT_AVAILABLE';
+  end if;
+
+  insert into public.subscriptions (user_id, trial_ends_at, access_until)
+  values (uid, ends, ends)
+  on conflict (user_id) do update
+    set trial_ends_at = excluded.trial_ends_at, access_until = excluded.access_until;
+  return ends;
+end;
+$$;
+
+-- Pagos únicos de pases Premium (Yape). Se conservan aunque se borre la cuenta
+-- (comprobantes). Solo service_role.
+create table if not exists public.premium_payments (
+  provider_payment_id text primary key,
+  user_id             uuid references auth.users (id) on delete set null,
+  plan_interval       text not null check (plan_interval in ('monthly', 'yearly')),
+  amount              numeric(10, 2) not null,
+  currency            text not null default 'PEN',
+  method              text,
+  access_until        timestamptz not null,
+  created_at          timestamptz not null default now()
+);
+
+create index if not exists premium_payments_user_idx on public.premium_payments (user_id);
+
+-- Acredita un pase pagado: 1 mes (monthly) o 12 meses (yearly). Los días se
+-- suman al Premium que ya tenga (prueba, otro pase o suscripción cancelada).
+-- Es idempotente: el mismo pago nunca se acredita dos veces, aunque lleguen
+-- la respuesta del cobro y el webhook. Solo lo ejecutan las Edge Functions.
+create or replace function public.grant_premium_pass(
+  p_user_id    uuid,
+  p_payment_id text,
+  p_interval   text,
+  p_amount     numeric,
+  p_method     text default null
+)
+returns timestamptz
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  months  integer := case p_interval when 'monthly' then 1 when 'yearly' then 12 end;
+  already timestamptz;
+  starts  timestamptz;
+  ends    timestamptz;
+begin
+  if months is null then
+    raise exception using errcode = '22023', message = 'INVALID_INTERVAL';
+  end if;
+  perform pg_advisory_xact_lock(hashtext('premium:' || p_user_id::text));
+
+  select access_until into already from public.premium_payments where provider_payment_id = p_payment_id;
+  if found then
+    return already;
+  end if;
+
+  select greatest(now(), s.access_until, case when s.status = 'cancelled' then s.current_period_end end)
+    into starts
+    from public.subscriptions s
+   where s.user_id = p_user_id;
+  ends := coalesce(starts, now()) + make_interval(months => months);
+
+  insert into public.premium_payments (provider_payment_id, user_id, plan_interval, amount, method, access_until)
+  values (p_payment_id, p_user_id, p_interval, p_amount, p_method, ends);
+
+  insert into public.subscriptions (user_id, access_until)
+  values (p_user_id, ends)
+  on conflict (user_id) do update set access_until = excluded.access_until;
+  return ends;
+end;
 $$;
 
 
@@ -231,6 +384,8 @@ alter table public.cards             enable row level security;
 alter table public.purchases         enable row level security;
 alter table public.reminder_settings enable row level security;
 alter table public.reminder_log      enable row level security; -- sin políticas: solo service_role
+alter table public.trial_claims      enable row level security; -- sin políticas: solo service_role
+alter table public.premium_payments  enable row level security; -- sin políticas: solo service_role
 
 -- Suscripción: el usuario solo puede LEER la suya.
 drop policy if exists "subscriptions_select_own" on public.subscriptions;
@@ -314,14 +469,23 @@ create policy "reminder_settings_update_own" on public.reminder_settings
 --   service_role:      Edge Functions (webhook y avisos); ignora RLS.
 
 revoke all on public.subscriptions, public.profiles, public.cards, public.purchases,
-  public.reminder_settings, public.reminder_log from anon, authenticated;
+  public.reminder_settings, public.reminder_log, public.trial_claims, public.premium_payments
+  from anon, authenticated;
 
 grant select on public.subscriptions, public.profiles to authenticated;
 grant select, insert, update, delete on public.cards, public.purchases to authenticated;
 grant select, insert, update on public.reminder_settings to authenticated;
 
 grant all on public.subscriptions, public.profiles, public.cards, public.purchases,
-  public.reminder_settings, public.reminder_log to service_role;
+  public.reminder_settings, public.reminder_log, public.trial_claims, public.premium_payments
+  to service_role;
 
 revoke all on function public.is_premium() from public, anon;
 grant execute on function public.is_premium() to authenticated, service_role;
+
+-- La prueba la inicia la propia persona; los pases solo los acreditan las Edge Functions.
+revoke all on function public.start_trial() from public, anon;
+grant execute on function public.start_trial() to authenticated;
+
+revoke all on function public.grant_premium_pass(uuid, text, text, numeric, text) from public, anon, authenticated;
+grant execute on function public.grant_premium_pass(uuid, text, text, numeric, text) to service_role;
