@@ -19,9 +19,9 @@
 
 export const CONFIG = Object.freeze({
   /** URL del proyecto, ej. 'https://abcd1234.supabase.co' */
-  supabaseUrl: '',
-  /** Clave pública "anon" del proyecto (Settings > API). */
-  supabaseAnonKey: '',
+  supabaseUrl: 'https://yeoeuijdhuwanbgsiasu.supabase.co',
+  /** Clave pública del proyecto: publishable key o anon key (Project Settings > API Keys). */
+  supabaseAnonKey: 'sb_publishable_JIfJ9BQhmNW6nMM8plRL1Q_IRU_r0Z7',
   /** URL pública de la app para los enlaces de acceso y el retorno del pago. Vacío = URL actual. */
   appUrl: '',
   /** Muestra el simulador de plan en modo local. No tiene efecto con Supabase conectado. */
