@@ -170,6 +170,7 @@ const state = {
   subscription: null,
   store: localStore,
   loginSentTo: null, // correo al que se envió el enlace de acceso
+  authProviders: {}, // proveedores activos en Supabase, ej. { email: true, google: false }
 
   // Interfaz
   today: startOfDay(new Date()),
@@ -456,7 +457,11 @@ async function applySession(user) {
 async function connectBackend() {
   try {
     state.client = await backend.getClient();
-    const { user, error } = await backend.getSessionUser(state.client);
+    const [{ user, error }, providers] = await Promise.all([
+      backend.getSessionUser(state.client),
+      backend.getAuthProviders(),
+    ]);
+    state.authProviders = providers;
     if (error) toast(`No se pudo iniciar sesión: ${error}`, 'error');
     await applySession(user);
 
@@ -1490,8 +1495,10 @@ function accountPanelHTML() {
         </div>
         <p class="field-hint">Te enviamos un enlace para entrar sin contraseña.</p>
       </form>
-      <div class="divider"><span>o</span></div>
-      <button type="button" class="btn btn--ghost btn--block" data-action="login-google">Continuar con Google</button>`;
+      ${state.authProviders.google
+        ? `<div class="divider"><span>o</span></div>
+      <button type="button" class="btn btn--ghost btn--block" data-action="login-google">Continuar con Google</button>`
+        : ''}`;
   }
 
   const email = state.user.email || 'Tu cuenta';

@@ -54,9 +54,38 @@ export async function getSessionUser(client) {
   return { user: data?.session?.user ?? null, error: urlError || error?.message || null };
 }
 
+/**
+ * Proveedores de acceso activos en Supabase (ej. { email: true, google: false }).
+ * Sirve para no mostrar el botón de Google si no está configurado.
+ */
+export async function getAuthProviders() {
+  if (!hasBackend()) return {};
+  try {
+    const response = await fetch(`${CONFIG.supabaseUrl}/auth/v1/settings`, {
+      headers: { apikey: CONFIG.supabaseAnonKey },
+    });
+    if (!response.ok) return {};
+    const settings = await response.json();
+    return settings.external || {};
+  } catch {
+    return {};
+  }
+}
+
+/** Traduce los errores más comunes del inicio de sesión. */
+function authErrorMessage(error) {
+  const message = error?.message || 'Error desconocido.';
+  const wait = message.match(/after (\d+) seconds?/i);
+  if (wait) return `Por seguridad, espera ${wait[1]} segundos antes de pedir otro enlace.`;
+  if (/rate limit/i.test(message)) return 'Se enviaron demasiados correos. Espera unos minutos e intenta de nuevo.';
+  if (/signups? not allowed/i.test(message)) return 'Por ahora no se aceptan cuentas nuevas.';
+  if (/invalid|unable to validate email/i.test(message)) return 'Ese correo no es válido.';
+  return message; // p. ej. el mensaje en español del bloqueo de correos temporales
+}
+
 export async function signInWithEmail(client, email) {
   const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: appUrl() } });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(authErrorMessage(error));
 }
 
 export async function signInWithGoogle(client) {

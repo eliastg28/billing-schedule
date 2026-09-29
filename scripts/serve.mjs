@@ -47,6 +47,15 @@ const server = createServer(async (req, res) => {
   }
 });
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`El puerto ${PORT} ya está en uso: probablemente el servidor ya está abierto en otra terminal.`);
+    console.error(`Entra a http://localhost:${PORT} o usa otro puerto: PORT=5174 node scripts/serve.mjs`);
+    process.exit(1);
+  }
+  throw err;
+});
+
 server.listen(PORT, () => {
   console.log(`Ciclo de Tarjetas en http://localhost:${PORT}  (Ctrl+C para detener)`);
 });

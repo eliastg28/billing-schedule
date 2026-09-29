@@ -55,6 +55,9 @@ js/
   config.js             Configuración del servidor  ← se edita al desplegar
 supabase/
   schema.sql            Tablas, seguridad (RLS) y límite de tarjetas
+  auth-hooks.sql        Bloqueo de correos temporales al registrarse
+  disposable-domains.sql Lista de dominios temporales (generada)
+  email-templates/      Correos de acceso en español
   cron.sql              Envío diario de avisos por correo
   functions/
     _shared/engine.js   Copia exacta de js/engine.js (lo verifica un test)
@@ -64,6 +67,7 @@ supabase/
     mercadopago-webhook/Activa o desactiva Premium según Mercado Pago
 tests/                  Pruebas (npm test)
 scripts/serve.mjs       Servidor local sin dependencias
+scripts/update-disposable-domains.mjs  Regenera la lista de dominios temporales
 ```
 
 Si cambias `js/engine.js`, copia el archivo a `supabase/functions/_shared/engine.js`. El test `server.test.mjs` falla si las copias no son iguales.
@@ -78,9 +82,11 @@ Necesitas cuentas en [Supabase](https://supabase.com), [Resend](https://resend.c
 
 1. Crea un proyecto (región São Paulo es la más cercana a Perú).
 2. En **SQL Editor**, pega `supabase/schema.sql` completo y ejecútalo.
-3. En **Authentication > Sign In / Providers**, deja activo **Email** (enlace mágico). Para Google, activa **Google** con las credenciales de Google Cloud.
+3. En **Authentication > Sign In / Providers**, deja activo **Email** (enlace mágico). El botón de Google solo aparece en la app si activas **Google** con las credenciales de Google Cloud.
 4. En **Authentication > URL Configuration**, pon la URL pública de la app en **Site URL** y en **Redirect URLs** (también `http://localhost:5173` para pruebas).
 5. En **Settings > API Keys**, copia la URL del proyecto y la clave pública (anon o publishable).
+6. **Correos temporales:** en el SQL Editor ejecuta `supabase/auth-hooks.sql` y luego `supabase/disposable-domains.sql`. Después, en **Authentication > Auth Hooks**, agrega un hook **Before User Created** de tipo Postgres con la función `public.hook_before_user_created`.
+7. **Correos en español:** en **Authentication > Emails > Templates**, reemplaza **Confirm signup** con `supabase/email-templates/confirmar-cuenta.html` y **Magic Link** con `supabase/email-templates/enlace-de-acceso.html`. El asunto de cada uno está al inicio del archivo.
 
 ### 2. Conectar la app
 

@@ -1,0 +1,37 @@
+<!--
+  Plantilla "Magic Link" de Supabase (ingresos siguientes de un usuario que ya existe).
+  Dónde: Authentication > Emails > Templates > Magic Link
+  Asunto: Tu enlace para entrar · Ciclo de Tarjetas
+  Pega todo este archivo en "Message body".
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f5fa;padding:24px 12px;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#111827">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:16px;overflow:hidden">
+        <tr>
+          <td style="background-color:#8b9bff;background-image:linear-gradient(135deg,#8b9bff,#2dd4bf);padding:24px 28px">
+            <p style="margin:0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0a0d14">Ciclo de Tarjetas</p>
+            <p style="margin:4px 0 0;font-size:14px;color:#0a0d14">¿Con qué tarjeta compro hoy?</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px">
+            <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#111827">Tu enlace para entrar</h1>
+            <p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#4f5b73">Haz clic en el botón para entrar a tu cuenta. No necesitas contraseña.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="border-radius:10px;background-color:#4f5fe0">
+                  <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 22px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">Entrar a mi cuenta</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:#4f5b73">Ábrelo en el mismo navegador donde pediste el enlace. Por seguridad, funciona una sola vez.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 28px;background-color:#f6f8fc;font-size:12px;line-height:1.5;color:#7d889e">Si no pediste este enlace, ignora este correo. Nadie puede entrar a tu cuenta sin él.</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
