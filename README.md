@@ -128,13 +128,16 @@ supabase secrets set \
   REMINDERS_FROM="CuálToca <avisos@tu-dominio.com>" \
   REMINDERS_CRON_SECRET=un-texto-largo-y-aleatorio
 
-supabase functions deploy create-checkout
-supabase functions deploy cancel-subscription
+supabase functions deploy create-checkout --no-verify-jwt
+supabase functions deploy cancel-subscription --no-verify-jwt
 supabase functions deploy send-reminders --no-verify-jwt
 supabase functions deploy mercadopago-webhook --no-verify-jwt
 ```
 
-`send-reminders` y `mercadopago-webhook` se despliegan sin verificación JWT porque las llaman el cron y Mercado Pago. Se protegen con su propio secreto y con la firma del webhook.
+Todas se despliegan sin la verificación JWT automática, que no es compatible con las claves nuevas de Supabase. Cada función se protege sola:
+- `create-checkout` y `cancel-subscription` validan la sesión del usuario con Supabase Auth.
+- `send-reminders` exige el secreto `REMINDERS_CRON_SECRET`.
+- `mercadopago-webhook` valida la firma de Mercado Pago.
 
 ### 6. Avisos diarios
 
