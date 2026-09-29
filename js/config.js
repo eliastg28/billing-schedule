@@ -26,6 +26,12 @@ export const CONFIG = Object.freeze({
   appUrl: '',
   /** Muestra el simulador de plan en modo local. No tiene efecto con Supabase conectado. */
   devTools: true,
+  /**
+   * Cobros con Mercado Pago. Mientras sea false, los planes se muestran como
+   * "Muy pronto" y nadie puede iniciar un pago. Actívalo cuando las Edge
+   * Functions de cobro estén desplegadas y probadas (ver README).
+   */
+  paymentsEnabled: false,
   /** Cliente oficial de Supabase (solo se descarga si hay servidor configurado). */
   supabaseJsUrl: 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm',
 });

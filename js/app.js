@@ -186,6 +186,9 @@ const state = {
 /** Modo de prueba: sin servidor se puede simular el plan desde la pantalla Cuenta. */
 const isDevMode = () => state.backend === 'none' && CONFIG.devTools;
 
+/** ¿Se puede iniciar un pago? (en modo de prueba se simula; en producción depende de CONFIG.paymentsEnabled) */
+const paymentsAvailable = () => isDevMode() || CONFIG.paymentsEnabled;
+
 /** 'free' | 'premium' */
 function currentPlanId() {
   if (state.user) return isSubscriptionActive(state.subscription) ? 'premium' : 'free';
@@ -335,7 +338,9 @@ function openUpgrade(reason = 'generic') {
   $('#upgrade-title').textContent = copy.title;
   $('#upgrade-text').textContent = copy.text;
   $('#upgrade-benefits').innerHTML = PREMIUM_BENEFITS.map((b) => `<li>${icon('check')}<span>${b}</span></li>`).join('');
-  $('#upgrade-price').textContent = `${priceText('monthly')} al mes o ${priceText('yearly')} al año. Cancela cuando quieras.`;
+  $('#upgrade-price').textContent = paymentsAvailable()
+    ? `${priceText('monthly')} al mes o ${priceText('yearly')} al año. Cancela cuando quieras.`
+    : `Muy pronto: ${priceText('monthly')} al mes o ${priceText('yearly')} al año.`;
   dialog.returnValue = '';
   dialog.showModal();
   dialog.addEventListener('close', () => {
@@ -1552,17 +1557,18 @@ function plansPanelHTML() {
   let actions = '';
   const showOffer = !premium || (sub?.status === 'cancelled');
   if (showOffer && !(premium && isDevMode())) {
-    const note = isDevMode()
-      ? 'Modo de prueba: al elegir un plan se activa Premium sin cobrar.'
-      : state.user
-        ? 'Pago seguro con Mercado Pago. Cancela cuando quieras.'
-        : 'Inicia sesión para suscribirte. Pago seguro con Mercado Pago.';
+    const payable = paymentsAvailable();
+    let note = 'Inicia sesión para suscribirte. Pago seguro con Mercado Pago.';
+    if (isDevMode()) note = 'Modo de prueba: al elegir un plan se activa Premium sin cobrar.';
+    else if (!payable) note = '<strong>Muy pronto</strong> podrás suscribirte a Premium con Mercado Pago. Mientras tanto, todo el plan Gratis está disponible.';
+    else if (state.user) note = 'Pago seguro con Mercado Pago. Cancela cuando quieras.';
+    const disabled = payable ? '' : 'disabled';
     actions = `
       <div class="price-options">
-        <button type="button" class="price-option" data-action="checkout" data-interval="monthly">
+        <button type="button" class="price-option" data-action="checkout" data-interval="monthly" ${disabled}>
           <span class="price">${priceText('monthly')}</span><span class="price-period">al mes</span>
         </button>
-        <button type="button" class="price-option price-option--best" data-action="checkout" data-interval="yearly">
+        <button type="button" class="price-option price-option--best" data-action="checkout" data-interval="yearly" ${disabled}>
           <span class="price-save">Ahorra ${yearlySavingsPercent()}%</span>
           <span class="price">${priceText('yearly')}</span><span class="price-period">al año</span>
         </button>
@@ -2038,6 +2044,10 @@ async function checkout(interval, button) {
     storageSet(DEV_PLAN_KEY, 'premium');
     onPlanChanged();
     toast('Premium de prueba activado. No se hizo ningún cobro.', 'success');
+    return;
+  }
+  if (!CONFIG.paymentsEnabled) {
+    toast('Premium estará disponible muy pronto.');
     return;
   }
   if (!state.client) {

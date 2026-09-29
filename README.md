@@ -100,6 +100,8 @@ appUrl: 'https://TU-DOMINIO/',
 
 La clave pública puede estar en el código: la seguridad la dan las políticas RLS. **Nunca** pongas la clave `service_role` en el navegador.
 
+Mientras `paymentsEnabled` sea `false`, los planes se muestran como "Muy pronto" y nadie puede iniciar un pago. Cámbialo a `true` cuando termines el paso 5 y pruebes un cobro.
+
 ### 3. Correos (Resend)
 
 1. Crea una cuenta y verifica tu dominio (para enviar desde `avisos@tu-dominio.com`).
